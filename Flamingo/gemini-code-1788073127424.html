@@ -1,0 +1,1035 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>فلامنجو هايبر ماركت - السحابي</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+<!-- Firebase SDKs (Compat version for simplicity) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<style>
+:root {
+  --navy: #2B4257;
+  --pink: #F38198;
+  --light-bg: #f4f7f6;
+  --dark-text: #2c3e50;
+  --border: #e0e6ed;
+}
+
+*{box-sizing:border-box}
+body{margin:0;font-family:'Cairo', Tahoma, Arial, sans-serif;background:var(--light-bg);color:var(--dark-text)}
+
+/* --- Login Screen Styles --- */
+#login-screen {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: var(--navy); display: flex; justify-content: center; align-items: center;
+  z-index: 9999; padding: 15px;
+}
+.login-box {
+  background: #fff; padding: 40px 30px; border-radius: 16px; width: 100%; max-width: 400px;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.3); text-align: center;
+}
+.login-box .field { margin-bottom: 15px; text-align: right; }
+.login-box label { font-weight: 600; color: var(--navy); font-size: 14px; margin-bottom: 5px; display: block;}
+.login-box input { width: 100%; padding: 12px; border: 2px solid var(--border); border-radius: 8px; font-size: 15px; font-family: inherit; transition: 0.3s; }
+.login-box input:focus { border-color: var(--pink); outline: none; box-shadow: 0 0 0 3px rgba(243,129,152,0.1); }
+.login-box button { width: 100%; padding: 14px; font-size: 16px; margin-top: 15px; border-radius: 8px; }
+.login-error { color: #e74c3c; font-size: 14px; margin-bottom: 15px; display: none; font-weight: bold; background: #fadbd8; padding: 10px; border-radius: 6px;}
+
+/* --- Main App Layout --- */
+.app{display:none; min-height:100vh}
+.side{width:240px;background:var(--navy);color:#fff;padding:20px 15px;position:fixed;right:0;top:0;bottom:0;z-index:100;overflow-y:auto; box-shadow: -2px 0 10px rgba(0,0,0,0.1);}
+.logo{text-align:center;padding-bottom:15px;border-bottom:1px solid rgba(255,255,255,0.1);margin-bottom:15px;}
+.user-info { text-align: center; font-size: 14px; color: #f8f9fa; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 15px; }
+.nav button{width:100%;border:0;background:transparent;color:#ecf0f1;text-align:right;padding:12px 15px;border-radius:8px;margin:4px 0;font-size:15px;cursor:pointer;transition:0.2s;white-space:nowrap; font-family: inherit; font-weight: 600;}
+.nav button:hover, .nav button.active{background:rgba(255,255,255,0.1);color: var(--pink);}
+.manager-only { display: none; }
+
+.main{margin-right:240px;width:calc(100% - 240px);padding:25px;transition:all 0.3s}
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px}
+.top h1{margin:0;font-size:24px; color: var(--navy); font-weight: 700;}
+.actions{display:flex;gap:10px;flex-wrap:wrap}
+
+button{cursor:pointer;border:0;border-radius:8px;padding:10px 16px;font-weight:bold;font-size:14px;transition:0.2s; font-family: inherit;}
+button:hover{opacity:0.9; transform: translateY(-1px);}
+button:active{transform: translateY(0);}
+.primary{background:var(--navy);color:#fff;box-shadow: 0 4px 6px rgba(43,66,87,0.2);}
+.success{background:var(--pink);color:#fff;box-shadow: 0 4px 6px rgba(243,129,152,0.3);}
+.danger{background:#e74c3c;color:#fff;box-shadow: 0 4px 6px rgba(231,76,60,0.2);}
+.warning{background:#f39c12;color:#fff;box-shadow: 0 4px 6px rgba(243,156,18,0.2);}
+.muted{background:#e8edf2;color:var(--dark-text);}
+.export-btn{background:#16a085;color:#fff;font-size:15px;padding:12px 20px;display:inline-flex;align-items:center;gap:8px;}
+
+.grid{display:grid;grid-template-columns:1.5fr 1fr;gap:20px}
+.card{background:#fff;border:none;border-radius:12px;padding:20px;box-shadow:0 4px 15px rgba(0,0,0,0.04);margin-bottom:20px;overflow-x:auto}
+.card h3{margin:0 0 15px;font-size:18px;color:var(--navy);border-bottom:2px solid var(--light-bg);padding-bottom:10px; font-weight: 700;}
+
+.form{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.field label{display:block;font-size:13px;color:#7f8c8d;margin-bottom:6px;font-weight:600}
+.field input, .field select, .field textarea{width:100%;padding:10px;border:2px solid var(--border);border-radius:8px;font-family:inherit;font-size:14px; transition: 0.3s;}
+.field input:focus, .field textarea:focus{outline:none;border-color:var(--pink); background: #fffafb;}
+.field textarea{min-height:70px;resize:vertical}
+.full{grid-column:1/-1}
+
+.items{width:100%;border-collapse:separate;border-spacing:0;margin-top:15px;}
+.items th, .items td{border-bottom:1px solid var(--border);padding:12px 10px;text-align:center;font-size:14px}
+.items th{background:#f8f9fa;color:var(--navy);font-weight: 700; border-top: 1px solid var(--border); border-bottom: 2px solid var(--border);}
+.items th:first-child{border-top-right-radius: 8px;}
+.items th:last-child{border-top-left-radius: 8px;}
+.qty{font-size:16px;font-weight:bold;color:var(--navy)}
+.price-col{color:var(--pink);font-weight:bold}
+
+.addrow{display:grid;grid-template-columns:1.5fr 70px 80px 80px 1.5fr 85px;gap:8px;margin-top:15px; align-items: end;}
+.addrow input{min-width:0;padding:10px;border:2px solid var(--border);border-radius:8px;font-family:inherit;font-size:14px}
+.addrow button{padding: 10px;}
+
+.search{width:100%;padding:12px;border:2px solid var(--border);border-radius:8px;font-size:15px;margin-bottom:20px; font-family: inherit;}
+.search:focus { outline:none; border-color: var(--pink); }
+
+/* --- 80mm Receipt Strict Styles --- */
+.receipt-container {
+    background: #fdfdfd; display: flex; justify-content: center;
+}
+.receipt{
+  background:#fff;border:1px solid #ccc;padding:10px 5px;width:100%;max-width:302px;
+  font-family:Tahoma,Arial,sans-serif;box-shadow:0 0 10px rgba(0,0,0,0.05);color:#000;
+  margin: 0 auto;
+}
+.rid{text-align:center;font-size:24px;font-weight:bold;margin:6px 0;color:#000}
+.sep{border-top:1px dashed #000;margin:8px 0}
+.rtable{width:100%;border-collapse:collapse;margin:6px 0;table-layout:fixed}
+.rtable th, .rtable td{
+  border:1px solid #333;padding:4px 2px;font-size:12px;text-align:center;word-break:break-word;
+}
+.rtable th{background:#f0f0f0;font-weight:bold; font-size: 11px;}
+.rtable td.col-name{text-align:right;padding-right:4px; font-weight:bold;}
+.rtotal{font-size:16px;font-weight:bold;text-align:center;padding:8px;border:2px solid #000;margin-top:8px;background:#f9f9f9}
+.rmeta{font-size:11px;display:flex;justify-content:space-between;gap:4px;border:1px solid #000;padding:6px;margin-top:8px; font-weight:bold;}
+
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:15px;margin-top:15px;margin-bottom:25px}
+.stat{background:#fff;border:none;border-radius:12px;padding:20px;text-align:center;box-shadow:0 4px 15px rgba(0,0,0,0.04); position: relative; overflow: hidden;}
+.stat::after { content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 4px; background: var(--pink); }
+.stat:nth-child(2)::after { background: var(--navy); }
+.stat:nth-child(3)::after { background: #27ae60; }
+.stat span{color:#7f8c8d;font-size:14px;font-weight:600}
+.stat b{display:block;font-size:30px;margin-top:10px;color:var(--dark-text)}
+
+.datatable{width:100%;border-collapse:collapse;background:#fff;border-radius:8px;overflow:hidden}
+.datatable th, .datatable td{border-bottom:1px solid var(--border);padding:12px;text-align:center;font-size:14px}
+.datatable th{background:#f8f9fa;color:var(--navy);font-weight:bold}
+.datatable tr:hover{background:#fafdff}
+
+.tab-content{display:none;animation:fadeIn 0.3s}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+.modal-overlay {
+    display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(43,66,87,0.8); z-index: 1000; justify-content: center; align-items: center; padding:15px; backdrop-filter: blur(3px);
+}
+.modal-content { background: #fff; padding: 25px; border-radius: 12px; width: 100%; max-width: 350px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+
+/* --- Mobile Responsiveness --- */
+@media(max-width: 850px){
+  .app { flex-direction: column; }
+  .side {
+    position: sticky; top: 0; right: 0; left: 0; width: 100%; height: auto;
+    padding: 10px 15px; display: flex; flex-direction: column; gap: 5px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  }
+  .logo { display: none; }
+  .user-info { display: flex; justify-content: space-between; align-items: center; padding-bottom: 8px; margin-bottom: 8px; font-size: 13px; border-color: rgba(255,255,255,0.15); }
+  .nav {
+    display: flex; overflow-x: auto; gap: 8px; padding-bottom: 5px; scrollbar-width: none;
+  }
+  .nav::-webkit-scrollbar { display: none; }
+  .nav button {
+    width: auto; padding: 8px 14px; margin: 0; font-size: 13px; background: rgba(255,255,255,0.08); border-radius: 8px; flex-shrink: 0; border: 1px solid rgba(255,255,255,0.05);
+  }
+  .nav button.active { background: var(--pink); color: #fff; border-color: var(--pink); }
+  .manager-only, #btn-tab-users { margin-top: 0 !important; border-top: 0 !important; }
+  
+  .main { margin-right: 0; width: 100%; padding: 15px; }
+  .top h1 { font-size: 20px; }
+  .grid { grid-template-columns: 1fr; gap: 15px; }
+  .form { grid-template-columns: 1fr 1fr; }
+  .addrow { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .addrow button { grid-column: 1 / -1; margin-top: 5px; }
+  .stats { grid-template-columns: 1fr; gap: 10px; }
+}
+
+@page{size:78mm auto;margin:0}
+@media print{
+  html,body{width:78mm!important;margin:0!important;padding:0!important;background:#fff!important; font-family: Tahoma, Arial, sans-serif !important;}
+  body{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  #login-screen, .modal-overlay {display:none!important}
+  .app{display:block;min-height:0}
+  .side,.top,.no-print,.nav,.actions{display:none!important}
+  .main{margin:0!important;padding:0!important;width:78mm!important}
+  .grid{display:block}
+  #tab-new{display:block!important}
+  .card.formcard{display:none!important}
+  .card:not(.formcard){border:none!important;box-shadow:none!important;padding:0!important;margin-bottom:0!important}
+  .receipt-container { display:block!important; background:#fff!important; padding:0!important; }
+  .receipt{
+    display:block!important;border:none!important;box-shadow:none!important;
+    width:76mm!important;max-width:76mm!important;margin:0 auto!important;
+    padding:1mm!important;min-height:0!important;font-size:12px!important;
+    line-height:1.2!important;overflow:hidden!important;
+  }
+}
+</style>
+</head>
+<body>
+
+<!-- Login Screen -->
+<div id="login-screen">
+  <div class="login-box">
+    <div style="text-align:center; margin-bottom:15px;">
+      <h1 style="margin:0; color:var(--navy); font-size:28px; font-weight:800; letter-spacing: -1px;">فلامنجو</h1>
+      <div style="font-size:12px; color:var(--pink); font-weight:bold; letter-spacing:1px; margin-top:4px;">CLOUD POS</div>
+    </div>
+    
+    <div id="loginError" class="login-error">الكود أو كلمة المرور غير صحيحة!</div>
+    <form onsubmit="event.preventDefault(); attemptLogin();">
+        <div class="field">
+        <label>كود المستخدم</label>
+        <input type="text" id="loginCode" placeholder="أدخل الكود الخاص بك" required autocomplete="off">
+        </div>
+        <div class="field">
+        <label>كلمة المرور</label>
+        <input type="password" id="loginPassword" placeholder="أدخل كلمة المرور" required>
+        </div>
+        <button type="submit" class="success" style="font-size: 18px;">تسجيل الدخول</button>
+    </form>
+  </div>
+</div>
+
+<!-- Change Password Modal -->
+<div id="pwdModal" class="modal-overlay">
+  <div class="modal-content">
+    <h3 style="margin-top:0; color:var(--navy); font-weight: 700;">تغيير كلمة المرور</h3>
+    <div class="field" style="text-align:right">
+      <label>كلمة المرور الجديدة</label>
+      <input type="password" id="newPwd" placeholder="اكتب الباسورد الجديد">
+    </div>
+    <div style="display:flex; gap:10px; margin-top:20px">
+      <button class="success" style="flex:1" onclick="saveNewPassword()">حفظ التغيير</button>
+      <button class="danger" style="flex:1" onclick="document.getElementById('pwdModal').style.display='none'">إلغاء</button>
+    </div>
+  </div>
+</div>
+
+<!-- Main Application -->
+<div class="app" id="main-app">
+  <aside class="side no-print">
+    <div class="logo">
+      <h2 style="margin:0; color:#fff; font-size:24px; font-weight:800;">فلامنجو</h2>
+      <div style="font-size:11px; color:var(--pink); font-weight:bold; letter-spacing:1px; margin-top:4px;">CLOUD POS</div>
+    </div>
+
+    <div class="user-info">
+      <div>مرحباً، <b id="displayUserName" style="color: var(--pink);"></b></div>
+      <div id="displayUserRole" style="font-size:11px; margin-top: 4px;"></div>
+    </div>
+    
+    <div class="nav">
+      <button id="btn-tab-new" class="active" onclick="switchTab('tab-new')"><span>＋ أوردر جديد</span></button>
+      <button id="btn-tab-suspended" onclick="switchTab('tab-suspended')"><span>⏳ أوردرات مؤجلة</span></button>
+      <button id="btn-tab-search" onclick="switchTab('tab-search')"><span>⌕ البحث والأرشيف</span></button>
+      <button id="btn-tab-cancel" onclick="switchTab('tab-cancel')"><span>❌ إلغاء الأوردرات</span></button>
+      <button id="btn-tab-reports" onclick="switchTab('tab-reports')"><span>📊 التقارير والإكسيل</span></button>
+      
+      <button id="btn-tab-users" class="manager-only" onclick="switchTab('tab-users')"><span>👨‍💼 إدارة الموظفين</span></button>
+      <button style="color:var(--pink)" onclick="document.getElementById('pwdModal').style.display='flex'"><span>🔑 تغيير الباسورد</span></button>
+      <button style="color:#e74c3c" onclick="logout()"><span>🚪 تسجيل خروج</span></button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <!-- 1. شاشة أوردر جديد -->
+    <div id="tab-new" class="tab-content" style="display:block">
+      <div class="top no-print">
+        <h1>إنشاء أوردر جديد</h1>
+        <div class="actions">
+          <button class="muted" onclick="clearOrder()" style="background:#bdc3c7; color:#2c3e50;">🔄 تفريغ الشاشة</button>
+          <button class="warning" onclick="suspendOrder()">⏳ تعليق</button>
+          <button class="primary" onclick="saveOrder(false)">💾 حفظ فقط</button>
+          <button class="success" onclick="saveAndPrint()">🖨️ حفظ وطباعة</button>
+        </div>
+      </div>
+
+      <div class="grid">
+        <section class="card formcard no-print">
+          <h3>بيانات الأوردر والعميل</h3>
+          <div class="form">
+            <input type="hidden" id="orderId">
+            <input type="hidden" id="windowNum">
+            <input type="hidden" id="orderDate">
+            
+            <div class="field"><label>اسم العميل</label><input id="customer" placeholder="اسم العميل (اختياري)" autofocus></div>
+            <div class="field"><label>رقم الموبايل</label><input id="phone" inputmode="tel" placeholder="01X..."></div>
+            <div class="field"><label>المنطقة</label><input id="area" placeholder="المنطقة"></div>
+            <div class="field full"><label>العنوان بالتفصيل</label><input id="address" placeholder="العنوان ورقم العمارة والشقة"></div>
+            <div class="field full"><label>ملاحظات الأوردر</label><textarea id="notes" placeholder="أي ملاحظات عامة للطيار أو التجهيز..."></textarea></div>
+          </div>
+
+          <h3 style="margin-top:25px">إضافة صنف للأوردر</h3>
+          <div class="addrow">
+            <input id="productName" type="text" placeholder="اسم المنتج">
+            <input id="qty" type="number" min="1" value="1" placeholder="الكمية">
+            <input id="weight" type="number" min="0" placeholder="الوزن (جرام)">
+            <input id="price" type="number" min="0" value="0" placeholder="السعر">
+            <input id="itemNote" type="text" placeholder="ملاحظات الصنف" style="grid-column: span 2">
+            <button class="primary" onclick="addItem()">إضافة ＋</button>
+          </div>
+          
+          <table class="items">
+            <thead><tr><th>#</th><th>الصنف</th><th>الكمية</th><th>الوزن</th><th>السعر</th><th>الإجمالي</th><th>ملاحظات</th><th>إجراء</th></tr></thead>
+            <tbody id="itemsBody"></tbody>
+          </table>
+          <div style="display:flex;justify-content:space-between;margin-top:20px;font-size:15px;background:#f8f9fa;padding:15px;border-radius:8px;font-weight:bold;flex-wrap:wrap;gap:10px; border: 1px solid var(--border);">
+            <span>الأصناف: <span id="itemCount" style="color:var(--navy); font-size:18px;">0</span></span>
+            <span>الكمية: <span id="totalQty" style="color:var(--navy); font-size:18px;">0</span></span>
+            <span>الإجمالي الكلي: <span id="totalPrice" style="color:var(--pink); font-size:20px;">0</span> ج.م</span>
+          </div>
+        </section>
+
+        <section class="card receipt-container">
+          <div style="width:100%;">
+              <h3 class="no-print" style="text-align:center;">معاينة الفاتورة (80mm)</h3>
+              <div class="receipt" id="receipt"></div>
+              <div class="no-print" style="display:flex;gap:8px;margin-top:15px; max-width:302px; margin-left:auto; margin-right:auto;">
+                 <button class="success" style="flex:1; padding: 12px; font-size: 16px;" onclick="saveAndPrint()">طباعة الفاتورة 🖨️</button>
+              </div>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <!-- 2. شاشة أوردرات مؤجلة -->
+    <div id="tab-suspended" class="tab-content no-print">
+      <div class="top">
+        <h1>الأوردرات المعلقة (المؤجلة)</h1>
+      </div>
+      <div class="card">
+        <p style="color:#7f8c8d;margin-top:0;font-size:14px; font-weight: 600;">هذه الأوردرات تم تعليقها ولم تكتمل بعد. يمكنك استكمالها أو حذفها.</p>
+        <table class="datatable">
+          <thead><tr><th>تاريخ التعليق</th><th>العميل / الموبايل</th><th>الشباك</th><th>عدد الأصناف</th><th>الإجمالي المبدئي</th><th>إجراء</th></tr></thead>
+          <tbody id="suspendedBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 3. شاشة البحث -->
+    <div id="tab-search" class="tab-content no-print">
+      <div class="top">
+        <h1>البحث في الأوردرات السابقة</h1>
+      </div>
+      <div class="card">
+        <input id="historySearch" class="search" placeholder="ابحث برقم الأوردر، الوقت، الشباك، أو اسم العميل..." oninput="renderHistory()">
+        <table class="datatable">
+          <thead><tr><th>رقم الأوردر</th><th>الوقت</th><th>الشباك</th><th>العميل</th><th>الموبايل</th><th>الأصناف</th><th>الإجمالي</th><th>الكاشير</th><th>إجراء</th></tr></thead>
+          <tbody id="historyBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 4. شاشة إلغاء الأوردرات -->
+    <div id="tab-cancel" class="tab-content no-print">
+      <div class="top">
+        <h1>إلغاء الأوردرات من النظام</h1>
+      </div>
+      <div class="card">
+        <input id="cancelSearch" class="search" placeholder="ابحث برقم الأوردر، الوقت، الشباك، أو اسم العميل..." oninput="renderCancelList()">
+        <table class="datatable">
+          <thead><tr><th>رقم الأوردر</th><th>الوقت</th><th>الشباك</th><th>العميل</th><th>الموبايل</th><th>الإجمالي</th><th>إجراء الحذف النهائي</th></tr></thead>
+          <tbody id="cancelBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 5. شاشة التقارير -->
+    <div id="tab-reports" class="tab-content no-print">
+      <div class="top">
+        <h1>تقارير المبيعات</h1>
+        <button class="export-btn" onclick="exportToExcel()">
+          📥 تصدير التقرير إلى Excel
+        </button>
+      </div>
+      
+      <div class="card no-print" style="margin-bottom: 20px; display:flex; gap:12px; align-items:center; flex-wrap:wrap; background:#f8f9fa;">
+        <b style="font-size:14px; color:#2c3e50">تحديد الفترة من:</b>
+        <input type="date" id="dateFrom" style="padding:8px 12px; border:2px solid #e0e6ed; border-radius:8px; font-family:inherit; outline:none; font-weight: bold;">
+        <b style="font-size:14px; color:#2c3e50">إلى:</b>
+        <input type="date" id="dateTo" style="padding:8px 12px; border:2px solid #e0e6ed; border-radius:8px; font-family:inherit; outline:none; font-weight: bold;">
+        <button class="primary" style="padding:10px 16px" onclick="filterReports()">تنفيذ 🔍</button>
+        <button class="muted" style="padding:10px 16px" onclick="resetReports()">مبيعات اليوم فقط</button>
+      </div>
+      
+      <div class="stats">
+        <div class="stat">
+          <span>إجمالي عدد الأوردرات</span>
+          <b id="sOrders">0</b>
+        </div>
+        <div class="stat">
+          <span>إجمالي الكميات المباعة</span>
+          <b id="sQty">0</b>
+        </div>
+        <div class="stat">
+          <span>إجمالي المبيعات (ج.م)</span>
+          <b id="sValue" style="color:var(--pink)">0</b>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6. Manager Tab: Users Management -->
+    <div id="tab-users" class="tab-content no-print manager-only">
+      <div class="top">
+        <h1>إدارة الموظفين (لوحة المدير)</h1>
+      </div>
+      
+      <div class="card">
+        <h3>إضافة موظف / كاشير جديد</h3>
+        <div class="form">
+          <div class="field"><label>اسم الموظف</label><input id="newUserName" placeholder="مثال: أحمد"></div>
+          <div class="field"><label>كود الدخول (User ID)</label><input id="newUserCode" placeholder="مثال: 101 أو ahmad1"></div>
+          <div class="field"><label>كلمة المرور المبدئية</label><input type="password" id="newUserPwd" placeholder="الباسورد"></div>
+        </div>
+        <button class="success" style="margin-top:15px;" onclick="createNewUser()">إنشاء حساب الموظف ➕</button>
+      </div>
+
+      <div class="card">
+        <h3>قائمة الموظفين المسجلين</h3>
+        <table class="datatable">
+          <thead><tr><th>الاسم</th><th>الكود (User ID)</th><th>الدور</th><th>إجراء</th></tr></thead>
+          <tbody id="usersListBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+// --- Firebase Database Setup ---
+const firebaseConfig = {
+  apiKey: "AIzaSyAA2tjh31LUxPrPRVrN7Sm2FU63KwE0Pdw",
+  authDomain: "flamingo-web-1c337.firebaseapp.com",
+  projectId: "flamingo-web-1c337",
+  storageBucket: "flamingo-web-1c337.firebasestorage.app",
+  messagingSenderId: "715648111180",
+  appId: "1:715648111180:web:684d94a7236f2617935ae9"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+// --- App State ---
+let users = [];
+let orders = [];
+let suspendedOrders = [];
+let currentItems = [];
+let editingSuspendedId = null;
+let currentUser = null;
+
+// --- Helper Functions ---
+function toEnglishNumbers(str) {
+  const arabicNumbers = ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'];
+  let res = String(str ?? '');
+  for(let i=0; i<10; i++) {
+    res = res.replace(new RegExp(arabicNumbers[i], 'g'), i);
+  }
+  return res;
+}
+
+function itemTotal(x) { return (x.weight && x.weight > 0 ? (x.weight / 1000) : 1) * x.price * x.qty; }
+
+function now() {
+  let d = new Date();
+  let dStr = d.toLocaleDateString("en-GB"); 
+  let tStr = d.toLocaleTimeString("ar-EG", {hour:"2-digit",minute:"2-digit"});
+  return dStr + " - " + tStr;
+}
+
+function esc(s) {
+  return String(s ?? "").replace(/[&<>"']/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
+}
+
+// --- Cloud Real-time Sync ---
+db.collection("users").onSnapshot(snapshot => {
+  let loadedUsers = [];
+  snapshot.forEach(doc => loadedUsers.push(doc.data()));
+  if(loadedUsers.length === 0) {
+    let defaultAdmin = { code: 'admin', password: 'admin', name: 'مدير النظام (Team Manager)', role: 'manager' };
+    db.collection("users").doc("admin").set(defaultAdmin);
+    users = [defaultAdmin];
+  } else {
+    users = loadedUsers;
+  }
+  renderUsersList();
+});
+
+db.collection("orders").onSnapshot(snapshot => {
+  orders = [];
+  let maxId = 99;
+  snapshot.forEach(doc => {
+    let o = doc.data();
+    orders.push(o);
+    if(parseInt(o.id) > maxId) maxId = parseInt(o.id);
+  });
+  orders.sort((a,b) => b.id - a.id);
+  localStorage.setItem("oms_seq_v11", maxId); 
+  
+  if(document.getElementById('tab-search').style.display === 'block') renderHistory();
+  if(document.getElementById('tab-cancel').style.display === 'block') renderCancelList();
+  if(document.getElementById('tab-reports').style.display === 'block') updateStats();
+});
+
+db.collection("suspended").onSnapshot(snapshot => {
+  suspendedOrders = [];
+  snapshot.forEach(doc => {
+    suspendedOrders.push(doc.data());
+  });
+  suspendedOrders.sort((a,b) => b.id - a.id);
+  if(document.getElementById('tab-suspended').style.display === 'block') renderSuspended();
+});
+
+function getNextId() {
+  let seq = parseInt(localStorage.getItem("oms_seq_v11"));
+  if (isNaN(seq) || seq < 99) { seq = 99; }
+  return seq + 1;
+}
+function incrementId() {
+  let n = getNextId(); 
+  localStorage.setItem("oms_seq_v11", n); 
+  return n;
+}
+
+// --- Auth & Users ---
+function attemptLogin() {
+  let code = toEnglishNumbers(document.getElementById("loginCode").value.trim());
+  let pwd = toEnglishNumbers(document.getElementById("loginPassword").value.trim());
+  let errorMsg = document.getElementById("loginError");
+  
+  let user = users.find(u => u.code === code && u.password === pwd);
+  if(user) {
+    currentUser = user;
+    sessionStorage.setItem("oms_current_user_v11", JSON.stringify(currentUser));
+    
+    errorMsg.style.display = 'none';
+    document.getElementById("loginCode").value = '';
+    document.getElementById("loginPassword").value = '';
+    
+    sessionStorage.setItem("oms_active_tab_v11", 'tab-new');
+    initAppUI();
+  } else {
+    errorMsg.style.display = 'block';
+  }
+}
+
+function initAppUI() {
+    document.getElementById("login-screen").style.display = 'none';
+    document.getElementById("main-app").style.display = 'flex';
+    
+    document.getElementById("displayUserName").textContent = currentUser.name;
+    document.getElementById("displayUserRole").textContent = currentUser.role === 'manager' ? "(مدير النظام)" : "(كاشير)";
+    
+    let managerElements = document.querySelectorAll(".manager-only");
+    managerElements.forEach(el => el.style.display = (currentUser.role === 'manager') ? 'block' : 'none');
+    
+    let lastTab = sessionStorage.getItem("oms_active_tab_v11") || 'tab-new';
+    switchTab(lastTab);
+    if(lastTab === 'tab-new') { clearOrder(); }
+}
+
+function logout() {
+  currentUser = null;
+  sessionStorage.removeItem("oms_current_user_v11"); 
+  sessionStorage.removeItem("oms_active_tab_v11"); 
+  document.getElementById("main-app").style.display = 'none';
+  document.getElementById("login-screen").style.display = 'flex';
+}
+
+function saveNewPassword() {
+  let newP = document.getElementById("newPwd").value.trim();
+  if(!newP) { alert("برجاء كتابة باسورد جديد"); return; }
+  let u = users.find(u => u.code === currentUser.code);
+  if(u) {
+    u.password = newP;
+    db.collection("users").doc(u.code).set(u).then(() => {
+        alert("تم تغيير كلمة المرور بنجاح!");
+        document.getElementById('pwdModal').style.display = 'none';
+        document.getElementById("newPwd").value = '';
+    });
+  }
+}
+
+function createNewUser() {
+  if (currentUser.role !== 'manager') return;
+  let n = document.getElementById("newUserName").value.trim();
+  let c = document.getElementById("newUserCode").value.trim();
+  let p = document.getElementById("newUserPwd").value.trim();
+  if(!n || !c || !p) { alert("أكمل جميع البيانات"); return; }
+  if(users.find(u => u.code === c)) { alert("هذا الكود مستخدم بالفعل! اختر كود آخر."); return; }
+  
+  let newUser = { name: n, code: c, password: p, role: 'cashier' };
+  db.collection("users").doc(c).set(newUser).then(() => {
+      document.getElementById("newUserName").value = "";
+      document.getElementById("newUserCode").value = "";
+      document.getElementById("newUserPwd").value = "";
+      alert("تم إضافة الموظف بنجاح!");
+  });
+}
+
+function renderUsersList() {
+  let b = document.getElementById("usersListBody");
+  b.innerHTML = users.map((u, i) => `
+    <tr>
+      <td>${esc(u.name)}</td>
+      <td><b>${esc(u.code)}</b></td>
+      <td>${u.role === 'manager' ? '<span style="color:var(--pink); font-weight:bold;">مدير</span>' : 'كاشير'}</td>
+      <td>${u.code !== 'admin' ? `<button class="danger" style="padding:6px 12px" onclick="deleteUser('${u.code}')">حذف</button>` : '-'}</td>
+    </tr>
+  `).join("");
+}
+
+function deleteUser(code) {
+  if (code === 'admin') return;
+  if(confirm("حذف هذا الموظف؟ لن يتمكن من الدخول مجدداً.")) {
+    db.collection("users").doc(code).delete();
+  }
+}
+
+// --- Navigation & Core App ---
+function switchTab(tabId) {
+  document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+  document.querySelectorAll('.nav button').forEach(el => el.classList.remove('active'));
+  document.getElementById(tabId).style.display = 'block';
+  let activeBtn = document.getElementById('btn-' + tabId);
+  if(activeBtn) activeBtn.classList.add('active');
+  
+  sessionStorage.setItem("oms_active_tab_v11", tabId);
+  
+  if(tabId === 'tab-suspended') renderSuspended();
+  if(tabId === 'tab-search') renderHistory();
+  if(tabId === 'tab-cancel') renderCancelList();
+  if(tabId === 'tab-reports') updateStats();
+  if(tabId === 'tab-users') renderUsersList();
+}
+
+function clearOrder() {
+  editingSuspendedId = null;
+  let nextId = getNextId(); 
+  
+  document.getElementById("orderId").value = nextId;
+  document.getElementById("windowNum").value = nextId - 99; 
+  document.getElementById("orderDate").value = now();
+  
+  ["customer", "phone", "area", "address", "notes", "productName", "weight", "itemNote"].forEach(x => {
+      let el = document.getElementById(x);
+      if(el) el.value = "";
+  });
+  document.getElementById("qty").value = 1;
+  document.getElementById("price").value = 0;
+  currentItems = [];
+  renderItems();
+  renderReceipt();
+  document.getElementById("customer").focus(); 
+}
+
+function addItem() {
+  let name = document.getElementById("productName").value.trim();
+  let q = Math.max(1, parseInt(document.getElementById("qty").value) || 1);
+  let w = parseFloat(document.getElementById("weight").value) || 0;
+  let p = parseFloat(document.getElementById("price").value) || 0;
+  let note = document.getElementById("itemNote").value.trim();
+  
+  if(!name) { alert("برجاء كتابة اسم المنتج أولاً."); document.getElementById("productName").focus(); return; }
+  currentItems.push({ product: name, qty: q, weight: w, price: p, note: note });
+  
+  document.getElementById("productName").value = "";
+  document.getElementById("qty").value = 1;
+  document.getElementById("price").value = 0;
+  document.getElementById("itemNote").value = "";
+  document.getElementById("productName").focus();
+  renderItems(); renderReceipt();
+}
+
+function removeItem(i) { currentItems.splice(i, 1); renderItems(); renderReceipt(); }
+
+function renderItems() {
+  let b = document.getElementById("itemsBody");
+  b.innerHTML = currentItems.map((x, i) => `
+    <tr>
+      <td>${i + 1}</td>
+      <td style="font-weight:700; color:var(--navy);">${esc(x.product)}</td>
+      <td class="qty">${x.qty}</td>
+      <td style="color:#7f8c8d">${x.weight ? x.weight + 'g' : '-'}</td>
+      <td class="price-col">${x.price}</td>
+      <td style="font-weight:bold; color:var(--navy);">${itemTotal(x)}</td>
+      <td style="font-size:12px; color:#7f8c8d;">${esc(x.note || "-")}</td>
+      <td><button class="danger" style="padding:6px 10px; font-size:12px;" onclick="removeItem(${i})">حذف</button></td>
+    </tr>
+  `).join("");
+  
+  document.getElementById("itemCount").textContent = currentItems.length;
+  document.getElementById("totalQty").textContent = currentItems.reduce((a, x) => a + x.qty, 0);
+  document.getElementById("totalPrice").textContent = currentItems.reduce((a, x) => a + itemTotal(x), 0);
+}
+
+function renderReceipt() {
+  let id = document.getElementById("orderId").value || getNextId();
+  let wNum = document.getElementById("windowNum").value || (getNextId() - 99);
+  let customer = document.getElementById("customer").value || "—";
+  let phone = document.getElementById("phone").value || "—";
+  let area = document.getElementById("area").value || "—";
+  let address = document.getElementById("address").value || "";
+  let notes = document.getElementById("notes").value || "";
+  let dt = document.getElementById("orderDate").value || now();
+  let totalVal = currentItems.reduce((a, x) => a + itemTotal(x), 0);
+  
+  let rows = currentItems.map((x) => `
+    <tr>
+      <td class="col-name"><b>${esc(x.product)}</b>${x.note ? `<div style="font-size:9px;color:#333">${esc(x.note)}</div>` : ""}</td>
+      <td>${x.qty}</td>
+      <td>${x.weight ? x.weight + 'g' : '-'}</td>
+      <td>${x.price}</td>
+      <td><b>${itemTotal(x)}</b></td>
+    </tr>
+  `).join("");
+
+  document.getElementById("receipt").innerHTML = `
+    <div style="text-align:center; margin-bottom:12px;">
+      <h2 style="margin:0; font-size:28px; font-weight:900; color:#000; letter-spacing:-1px;">فلامنجو</h2>
+      <div style="font-size:11px; font-weight:bold; letter-spacing:1px; color:#333; border-top:1px solid #000; display:inline-block; padding-top:4px; margin-top:2px;">CLOUD POS</div>
+    </div>
+    <div class="rid">شباك #${esc(wNum)}</div>
+    <div style="text-align:center;font-size:14px;margin-bottom:3px;font-weight:bold;">أوردر رقم: #${esc(id)}</div>
+    <div style="text-align:center;font-size:12px;margin-bottom:6px; font-weight: bold;">التاريخ: ${esc(dt)}</div>
+    <div class="sep"></div>
+    <div style="border:1px solid #000;padding:6px;line-height:1.6;font-size:13px; font-weight:bold;">
+      الاسم: ${esc(customer)}<br>
+      الموبايل: ${esc(phone)}<br>
+      المنطقة: ${esc(area)}
+      ${address ? `<br>العنوان: ${esc(address)}` : ""}
+    </div>
+    <div class="sep"></div>
+    <table class="rtable">
+      <thead>
+        <tr><th style="width:36%">الصنف</th><th style="width:14%">كمية</th><th style="width:16%">وزن</th><th style="width:16%">سعر</th><th style="width:18%">إجمالي</th></tr>
+      </thead>
+      <tbody>${rows || '<tr><td colspan="5" style="text-align:center">لم تتم إضافة أصناف</td></tr>'}</tbody>
+    </table>
+    <div class="rtotal">الإجمالي: ${totalVal} ج.م</div>
+    ${notes ? `<div style="margin-top:8px;border:1px dashed #000;padding:6px;font-size:12px;"><b>ملاحظات:</b> ${esc(notes)}</div>` : ''}
+    <div class="rmeta">
+      <span>الوقت: ${esc(new Date().toLocaleTimeString("ar-EG",{hour:"2-digit",minute:"2-digit"}))}</span>
+      <span>الكاشير: ${esc(currentUser ? currentUser.name : 'Admin')}</span>
+    </div>
+  `;
+}
+
+function collectData() {
+  let cId = document.getElementById("orderId").value;
+  let cWindow = document.getElementById("windowNum").value;
+  let cDate = document.getElementById("orderDate").value;
+  
+  if (!cId) { cId = getNextId(); document.getElementById("orderId").value = cId; }
+  if (!cWindow) { cWindow = getNextId() - 99; document.getElementById("windowNum").value = cWindow; }
+  if (!cDate) { cDate = now(); document.getElementById("orderDate").value = cDate; }
+
+  return {
+    id: cId,
+    windowNum: cWindow,
+    customer: document.getElementById("customer").value.trim(),
+    phone: document.getElementById("phone").value.trim(),
+    area: document.getElementById("area").value.trim(),
+    address: document.getElementById("address").value.trim(),
+    notes: document.getElementById("notes").value.trim(),
+    date: cDate,
+    isoDate: new Date().toISOString(),
+    items: JSON.parse(JSON.stringify(currentItems)),
+    cashierCode: currentUser.code,
+    cashierName: currentUser.name
+  };
+}
+
+function validateInput() {
+  if(!document.getElementById("customer").value.trim() && !document.getElementById("phone").value.trim()) { 
+    alert("برجاء كتابة اسم العميل أو رقم الموبايل."); return false; 
+  }
+  if(!currentItems.length) { 
+    alert("برجاء إضافة صنف واحد على الأقل."); return false; 
+  }
+  return true;
+}
+
+// --- Cloud Save Methods ---
+function suspendOrder() {
+  if(!document.getElementById("customer").value.trim() && !document.getElementById("phone").value.trim() && currentItems.length === 0) { alert("لا يوجد بيانات لتعليقها!"); return; }
+  
+  let currentId = document.getElementById("orderId").value;
+  let isNew = (!editingSuspendedId && orders.findIndex(x => x.id == currentId) === -1);
+  if(isNew) { incrementId(); }
+  
+  let o = collectData();
+  
+  if(editingSuspendedId) {
+    db.collection("suspended").doc(String(editingSuspendedId)).delete();
+  }
+  
+  db.collection("suspended").doc(String(o.id)).set(o).then(() => {
+    clearOrder();
+    alert("تم تعليق الأوردر بنجاح!");
+  });
+}
+
+function saveOrder(isPrint = false) {
+  if(!validateInput()) return;
+  
+  let currentId = document.getElementById("orderId").value;
+  let isNew = (!editingSuspendedId && orders.findIndex(x => x.id == currentId) === -1);
+  if(isNew) { incrementId(); document.getElementById("orderId").value = currentId; } 
+  
+  let o = collectData();
+  
+  if(editingSuspendedId) {
+    db.collection("suspended").doc(String(editingSuspendedId)).delete();
+    editingSuspendedId = null;
+  }
+  
+  db.collection("orders").doc(String(o.id)).set(o).then(() => {
+    if(!isPrint) { clearOrder(); alert("تم حفظ الأوردر بنجاح!"); }
+  }).catch(err => alert("حدث خطأ في الحفظ: " + err.message));
+}
+
+function saveAndPrint() {
+  if(!validateInput()) return;
+  
+  let currentId = document.getElementById("orderId").value;
+  let isNew = (!editingSuspendedId && orders.findIndex(x => x.id == currentId) === -1);
+  if(isNew) { incrementId(); document.getElementById("orderId").value = currentId; }
+  
+  let o = collectData();
+  
+  if(editingSuspendedId) {
+    db.collection("suspended").doc(String(editingSuspendedId)).delete();
+    editingSuspendedId = null;
+  }
+  
+  db.collection("orders").doc(String(o.id)).set(o).then(() => {
+    setTimeout(() => window.print(), 300);
+    setTimeout(clearOrder, 1500);
+  }).catch(err => alert("حدث خطأ: " + err.message));
+}
+
+// --- Read & Render Methods ---
+function getFilteredList(rawList) {
+  if(currentUser && currentUser.role === 'manager') return rawList;
+  if(currentUser) return rawList.filter(x => x.cashierCode === currentUser.code);
+  return [];
+}
+
+function renderSuspended() {
+  let list = getFilteredList(suspendedOrders);
+  let b = document.getElementById("suspendedBody");
+  if(list.length === 0) { b.innerHTML = `<tr><td colspan="6">لا توجد أوردرات معلقة حالياً.</td></tr>`; return; }
+  b.innerHTML = list.map((o, index) => {
+    let totalP = o.items.reduce((acc, x) => acc + itemTotal(x), 0);
+    return `<tr>
+      <td style="font-size:13px">${esc(o.date || 'بدون تاريخ')}</td>
+      <td style="font-weight:bold">${esc(o.customer || "—")} <br> <span style="font-weight:normal; color:#7f8c8d;">${esc(o.phone || "—")}</span></td>
+      <td><b style="color:var(--navy);font-size:16px">${esc(o.windowNum || "-")}</b></td>
+      <td>${o.items ? o.items.length : 0}</td>
+      <td style="color:var(--pink);font-weight:bold; font-size:15px;">${totalP} ج.م</td>
+      <td>
+        <button class="primary" style="padding:6px 12px; margin-bottom:4px;" onclick="resumeSuspended(${index})">استكمال</button>
+        <button class="danger" style="padding:6px 12px;" onclick="deleteSuspended('${o.id}')">حذف</button>
+      </td>
+    </tr>`;
+  }).join("");
+}
+
+function resumeSuspended(index) {
+  let list = getFilteredList(suspendedOrders);
+  let o = list[index];
+  editingSuspendedId = o.id || getNextId();
+  document.getElementById("orderId").value = o.id || editingSuspendedId;
+  document.getElementById("orderDate").value = o.date || now();
+  document.getElementById("windowNum").value = o.windowNum || (parseInt(o.id) - 99) || 1;
+  ["customer", "phone", "area", "address", "notes"].forEach(k => {
+      let el = document.getElementById(k);
+      if(el) el.value = o[k] || "";
+  });
+  currentItems = o.items ? JSON.parse(JSON.stringify(o.items)) : [];
+  switchTab('tab-new'); renderItems(); renderReceipt();
+}
+
+function deleteSuspended(id) {
+  if(confirm("هل أنت متأكد من حذف هذا الأوردر المعلق؟")) {
+    db.collection("suspended").doc(String(id)).delete();
+  }
+}
+
+function renderHistory() {
+  let q = (document.getElementById("historySearch").value || "").trim().toLowerCase();
+  let list = getFilteredList(orders).filter(o => {
+      let searchableStr = [String(o.id), String(o.windowNum), String(o.date), String(o.customer), String(o.phone), String(o.area)].join(" ").toLowerCase();
+      return !q || searchableStr.includes(q);
+  });
+  
+  let b = document.getElementById("historyBody");
+  if(list.length === 0) { b.innerHTML = `<tr><td colspan="9">لا يوجد نتائج للبحث.</td></tr>`; return; }
+  b.innerHTML = list.slice(0, 50).map(o => {
+    let totalP = o.items.reduce((a, x) => a + itemTotal(x), 0);
+    return `<tr>
+      <td style="font-size:13px; font-weight:bold; color:var(--navy);">${esc(o.id || 'بدون رقم')}</td>
+      <td style="font-size:12px">${esc(o.date || 'بدون تاريخ')}</td>
+      <td><b style="color:var(--dark-text);">${esc(o.windowNum || "-")}</b></td>
+      <td style="font-weight:bold;">${esc(o.customer)}</td>
+      <td>${esc(o.phone)}</td>
+      <td><span style="background:#e8edf2; padding:2px 8px; border-radius:12px; font-weight:bold;">${o.items.reduce((a, x) => a + x.qty, 0)}</span></td>
+      <td style="color:var(--pink);font-weight:bold">${totalP} ج.م</td>
+      <td style="font-size:12px; font-weight:bold;">${esc(o.cashierName || 'Admin')}</td>
+      <td><button class="primary" style="padding:4px 8px" onclick="loadOrderToPrint('${o.id}')">طباعة</button></td>
+    </tr>`;
+  }).join("");
+}
+
+function loadOrderToPrint(id) {
+  let o = orders.find(x => x.id == id);
+  if(!o) return;
+  document.getElementById("orderId").value = o.id || getNextId();
+  document.getElementById("orderDate").value = o.date || now();
+  document.getElementById("windowNum").value = o.windowNum || (parseInt(o.id) - 99);
+  ["customer", "phone", "area", "address", "notes"].forEach(k => {
+      let el = document.getElementById(k);
+      if(el) el.value = o[k] || "";
+  });
+  currentItems = o.items ? JSON.parse(JSON.stringify(o.items)) : [];
+  switchTab('tab-new'); renderItems(); renderReceipt();
+}
+
+function renderCancelList() {
+  let q = (document.getElementById("cancelSearch").value || "").trim().toLowerCase();
+  let list = getFilteredList(orders).filter(o => {
+      let searchableStr = [String(o.id), String(o.windowNum), String(o.date), String(o.customer), String(o.phone), String(o.area)].join(" ").toLowerCase();
+      return !q || searchableStr.includes(q);
+  });
+  
+  let b = document.getElementById("cancelBody");
+  if(list.length === 0) { b.innerHTML = `<tr><td colspan="7">لا توجد أوردرات مطابقة.</td></tr>`; return; }
+  b.innerHTML = list.slice(0, 50).map(o => `
+    <tr>
+      <td style="font-size:13px; font-weight:bold; color:var(--navy);">${esc(o.id || 'بدون رقم')}</td>
+      <td style="font-size:12px">${esc(o.date || 'بدون تاريخ')}</td>
+      <td><b style="color:var(--dark-text);">${esc(o.windowNum || "-")}</b></td>
+      <td style="font-weight:bold;">${esc(o.customer)}</td>
+      <td>${esc(o.phone)}</td>
+      <td style="color:var(--pink);font-weight:bold">${o.items.reduce((a, x) => a + itemTotal(x), 0)} ج.م</td>
+      <td><button class="danger" style="padding:4px 8px" onclick="deleteOrderForever('${o.id}')">حذف ❌</button></td>
+    </tr>
+  `).join("");
+}
+
+function deleteOrderForever(id) {
+  if(confirm("⚠️ هل أنت متأكد من حذف هذا الأوردر نهائياً؟ هذا الإجراء لا يمكن التراجع عنه.")) {
+    db.collection("orders").doc(String(id)).delete().then(() => {
+        if (document.getElementById('tab-new').style.display === 'block') { clearOrder(); }
+    });
+  }
+}
+
+// --- Reports ---
+let filteredOrdersForReport = [];
+function getOrderISODate(o) {
+  if (o.isoDate) return o.isoDate.split("T")[0];
+  try {
+    let p = o.date.split(" ")[0].split("/");
+    if (p.length === 3) return `${p[2]}-${p[1].padStart(2,'0')}-${p[0].padStart(2,'0')}`;
+  } catch(e) {}
+  return "";
+}
+
+function resetReports() {
+  let today = new Date().toISOString().split("T")[0];
+  document.getElementById("dateFrom").value = today; document.getElementById("dateTo").value = today;
+  filterReports();
+}
+
+function filterReports() {
+  let dFrom = document.getElementById("dateFrom").value;
+  let dTo = document.getElementById("dateTo").value;
+  let baseList = getFilteredList(orders);
+  filteredOrdersForReport = baseList.filter(o => {
+    let oDate = getOrderISODate(o);
+    if (!oDate) return true;
+    if (dFrom && oDate < dFrom) return false;
+    if (dTo && oDate > dTo) return false;
+    return true;
+  });
+  updateStatsUI();
+}
+
+function updateStatsUI() {
+  let tQ = 0, tV = 0;
+  filteredOrdersForReport.forEach(o => o.items.forEach(i => { tQ += i.qty; tV += itemTotal(i); }));
+  document.getElementById("sOrders").textContent = filteredOrdersForReport.length;
+  document.getElementById("sQty").textContent = tQ;
+  document.getElementById("sValue").textContent = tV;
+}
+
+function updateStats() {
+  if (!document.getElementById("dateFrom").value) {
+     let today = new Date().toISOString().split("T")[0];
+     document.getElementById("dateFrom").value = today; document.getElementById("dateTo").value = today;
+  }
+  filterReports();
+}
+
+function exportToExcel() {
+  if(filteredOrdersForReport.length === 0) { alert("لا يوجد بيانات لتصديرها في هذه الفترة."); return; }
+  let csvContent = "\uFEFFرقم الأوردر,التاريخ,الشباك,اسم العميل,رقم الموبايل,المنطقة,العنوان,إجمالي الكمية,إجمالي السعر (ج.م),اسم الكاشير,ملاحظات\n";
+  filteredOrdersForReport.forEach(o => {
+    let tQ = o.items.reduce((a, x) => a + x.qty, 0);
+    let tP = o.items.reduce((a, x) => a + itemTotal(x), 0);
+    let row = [
+      `"${esc(o.id)}"`, `"${esc(o.date)}"`, `"${esc(o.windowNum || "1")}"`, `"${esc(o.customer).replace(/"/g, '""')}"`,
+      `"${esc(o.phone)}"`, `"${esc(o.area).replace(/"/g, '""')}"`, `"${esc(o.address).replace(/"/g, '""')}"`,
+      tQ, tP, `"${esc(o.cashierName || 'Admin')}"`, `"${esc(o.notes).replace(/"/g, '""').replace(/\n/g, ' ')}"`
+    ];
+    csvContent += row.join(",") + "\n";
+  });
+  let link = document.createElement("a");
+  link.href = URL.createObjectURL(new Blob([csvContent], { type: 'text/csv;charset=utf-8;' }));
+  link.download = "Flamingo_Cloud_Reports_" + new Date().toISOString().split('T')[0] + ".csv";
+  link.click();
+}
+
+["customer", "phone", "area", "address", "notes"].forEach(x => {
+  document.getElementById(x).addEventListener("input", renderReceipt);
+});
+
+setInterval(() => {
+    let isNewScreen = document.getElementById('tab-new').style.display === 'block';
+    if (!editingSuspendedId && isNewScreen) {
+        document.getElementById("orderDate").value = now();
+        renderReceipt();
+    }
+}, 5000); 
+
+function checkSessionAndInit() {
+    let savedUser = sessionStorage.getItem("oms_current_user_v11");
+    if(savedUser) {
+        currentUser = JSON.parse(savedUser);
+        initAppUI(); 
+    } else {
+        document.getElementById("main-app").style.display = 'none';
+        document.getElementById("login-screen").style.display = 'flex';
+    }
+}
+checkSessionAndInit();
+</script>
+</body>
+</html>
