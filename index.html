@@ -3,13 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>فلامنجو هايبر ماركت - السحابي</title>
+<title>فلامنجو هايبر ماركت - إدارة الأوردرات</title>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
-
-<!-- Firebase SDKs (Compat version for simplicity) -->
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-
 <style>
 :root {
   --navy: #2B4257;
@@ -159,25 +154,79 @@ button:active{transform: translateY(0);}
   .stats { grid-template-columns: 1fr; gap: 10px; }
 }
 
-@page{size:78mm auto;margin:0}
+/* --- PRINT MEDIA QUERIES (DYNAMIC 100% TO FIT DRIVER EXACTLY) --- */
+@page { margin: 0; }
 @media print{
-  html,body{width:78mm!important;margin:0!important;padding:0!important;background:#fff!important; font-family: Tahoma, Arial, sans-serif !important;}
-  body{-webkit-print-color-adjust:exact;print-color-adjust:exact}
-  #login-screen, .modal-overlay {display:none!important}
-  .app{display:block;min-height:0}
-  .side,.top,.no-print,.nav,.actions{display:none!important}
-  .main{margin:0!important;padding:0!important;width:78mm!important}
-  .grid{display:block}
-  #tab-new{display:block!important}
-  .card.formcard{display:none!important}
-  .card:not(.formcard){border:none!important;box-shadow:none!important;padding:0!important;margin-bottom:0!important}
-  .receipt-container { display:block!important; background:#fff!important; padding:0!important; }
-  .receipt{
-    display:block!important;border:none!important;box-shadow:none!important;
-    width:76mm!important;max-width:76mm!important;margin:0 auto!important;
-    padding:1mm!important;min-height:0!important;font-size:12px!important;
-    line-height:1.2!important;overflow:hidden!important;
+  html, body {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #fff !important; 
+    font-family: Tahoma, Arial, sans-serif !important;
+    direction: rtl !important;
+    display: block !important;
   }
+  body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  
+  /* Hide UI elements */
+  #login-screen, .modal-overlay, .side, .top, .no-print, .nav, .actions, .card.formcard { display: none !important; }
+  
+  /* Reset Main wrapper */
+  .app { display: block; min-height: 0; width: 100% !important;}
+  .main { margin: 0 !important; padding: 0 !important; width: 100% !important; display: block !important;}
+  .grid { display: block; gap: 0; width: 100% !important;}
+  #tab-new { display: block !important; width: 100% !important;}
+  .card:not(.formcard) { border: none !important; box-shadow: none !important; padding: 0 !important; margin-bottom: 0 !important; width: 100% !important;}
+  
+  /* Fix Receipt Wrapper */
+  .receipt-container { 
+      display: block !important; 
+      width: 100% !important; 
+      background: #fff !important; 
+      padding: 0 !important; 
+      margin: 0 !important; 
+  }
+  
+  /* FLUID WIDTH TO PREVENT CLIPPING */
+  .receipt {
+    display: block !important;
+    border: none !important;
+    box-shadow: none !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    margin: 0 !important; 
+    padding: 0 4mm !important; /* Safe padding so text doesn't touch the exact physical edge */
+    min-height: 0 !important;
+    font-size: 12px !important;
+    line-height: 1.3 !important;
+    overflow: hidden !important; 
+    page-break-after: auto;
+  }
+  
+  .receipt div, .receipt table, .receipt tr {
+    page-break-inside: avoid !important;
+  }
+  
+  .rtable { width: 100% !important; table-layout: fixed !important; }
+  .rtable th, .rtable td {
+    border: 1px solid #444 !important;
+    padding: 3px 1px !important;
+    font-size: 11px !important; 
+    word-wrap: break-word !important;
+  }
+  /* Adjusted column ratios to ensure total has enough space */
+  .rtable th:nth-child(1), .rtable td:nth-child(1) { width: 34%; } /* Name */
+  .rtable th:nth-child(2), .rtable td:nth-child(2) { width: 13%; } /* Qty */
+  .rtable th:nth-child(3), .rtable td:nth-child(3) { width: 15%; } /* Weight */
+  .rtable th:nth-child(4), .rtable td:nth-child(4) { width: 16%; } /* Price */
+  .rtable th:nth-child(5), .rtable td:nth-child(5) { width: 22%; } /* Total */
+  
+  .rtotal { border: 1px solid #000 !important; padding: 6px !important; font-size: 14px !important; margin-top: 4px !important; }
+  .rid { font-size: 20px !important; margin: 4px 0 !important; }
+  .sep { border-top: 1px dashed #666 !important; margin: 6px 0 !important; }
+  .rmeta { border: 1px dashed #666 !important; padding: 4px !important; margin-top: 6px !important; font-size: 11px !important;}
 }
 </style>
 </head>
@@ -186,9 +235,11 @@ button:active{transform: translateY(0);}
 <!-- Login Screen -->
 <div id="login-screen">
   <div class="login-box">
+    
+    <!-- URL DIRECT LOGO FIX -->
     <div style="text-align:center; margin-bottom:15px;">
       <h1 style="margin:0; color:var(--navy); font-size:28px; font-weight:800; letter-spacing: -1px;">فلامنجو</h1>
-      <div style="font-size:12px; color:var(--pink); font-weight:bold; letter-spacing:1px; margin-top:4px;">CLOUD POS</div>
+      <div style="font-size:12px; color:var(--pink); font-weight:bold; letter-spacing:1px; margin-top:4px;">HYPER MARKET</div>
     </div>
     
     <div id="loginError" class="login-error">الكود أو كلمة المرور غير صحيحة!</div>
@@ -224,9 +275,11 @@ button:active{transform: translateY(0);}
 <!-- Main Application -->
 <div class="app" id="main-app">
   <aside class="side no-print">
+    
+    <!-- SIDEBAR LOGO FIX -->
     <div class="logo">
       <h2 style="margin:0; color:#fff; font-size:24px; font-weight:800;">فلامنجو</h2>
-      <div style="font-size:11px; color:var(--pink); font-weight:bold; letter-spacing:1px; margin-top:4px;">CLOUD POS</div>
+      <div style="font-size:11px; color:var(--pink); font-weight:bold; letter-spacing:1px; margin-top:4px;">HYPER MARKET</div>
     </div>
 
     <div class="user-info">
@@ -241,7 +294,10 @@ button:active{transform: translateY(0);}
       <button id="btn-tab-cancel" onclick="switchTab('tab-cancel')"><span>❌ إلغاء الأوردرات</span></button>
       <button id="btn-tab-reports" onclick="switchTab('tab-reports')"><span>📊 التقارير والإكسيل</span></button>
       
+      <!-- Manager Only Tab -->
       <button id="btn-tab-users" class="manager-only" onclick="switchTab('tab-users')"><span>👨‍💼 إدارة الموظفين</span></button>
+      
+      <!-- Settings / Logout -->
       <button style="color:var(--pink)" onclick="document.getElementById('pwdModal').style.display='flex'"><span>🔑 تغيير الباسورد</span></button>
       <button style="color:#e74c3c" onclick="logout()"><span>🚪 تسجيل خروج</span></button>
     </div>
@@ -253,10 +309,9 @@ button:active{transform: translateY(0);}
       <div class="top no-print">
         <h1>إنشاء أوردر جديد</h1>
         <div class="actions">
-          <button class="muted" onclick="clearOrder()" style="background:#bdc3c7; color:#2c3e50;">🔄 تفريغ الشاشة</button>
           <button class="warning" onclick="suspendOrder()">⏳ تعليق</button>
-          <button class="primary" onclick="saveOrder(false)">💾 حفظ فقط</button>
-          <button class="success" onclick="saveAndPrint()">🖨️ حفظ وطباعة</button>
+          <button class="primary" onclick="saveOrderAction()">💾 حفظ فقط</button>
+          <button class="success" onclick="saveAndPrintAction()">🖨️ حفظ وطباعة</button>
         </div>
       </div>
 
@@ -264,6 +319,7 @@ button:active{transform: translateY(0);}
         <section class="card formcard no-print">
           <h3>بيانات الأوردر والعميل</h3>
           <div class="form">
+            <!-- Hidden Automatic Fields to save space -->
             <input type="hidden" id="orderId">
             <input type="hidden" id="windowNum">
             <input type="hidden" id="orderDate">
@@ -301,7 +357,7 @@ button:active{transform: translateY(0);}
               <h3 class="no-print" style="text-align:center;">معاينة الفاتورة (80mm)</h3>
               <div class="receipt" id="receipt"></div>
               <div class="no-print" style="display:flex;gap:8px;margin-top:15px; max-width:302px; margin-left:auto; margin-right:auto;">
-                 <button class="success" style="flex:1; padding: 12px; font-size: 16px;" onclick="saveAndPrint()">طباعة الفاتورة 🖨️</button>
+                 <button class="success" style="flex:1; padding: 12px; font-size: 16px;" onclick="saveAndPrintAction()">طباعة الفاتورة 🖨️</button>
               </div>
           </div>
         </section>
@@ -393,8 +449,8 @@ button:active{transform: translateY(0);}
       <div class="card">
         <h3>إضافة موظف / كاشير جديد</h3>
         <div class="form">
-          <div class="field"><label>اسم الموظف</label><input id="newUserName" placeholder="مثال: أحمد"></div>
-          <div class="field"><label>كود الدخول (User ID)</label><input id="newUserCode" placeholder="مثال: 101 أو ahmad1"></div>
+          <div class="field"><label>اسم الموظف</label><input id="newUserName" placeholder="مثال: عمر الزناتي"></div>
+          <div class="field"><label>كود الدخول (User ID)</label><input id="newUserCode" placeholder="مثال: 101 أو omar1"></div>
           <div class="field"><label>كلمة المرور المبدئية</label><input type="password" id="newUserPwd" placeholder="الباسورد"></div>
         </div>
         <button class="success" style="margin-top:15px;" onclick="createNewUser()">إنشاء حساب الموظف ➕</button>
@@ -413,26 +469,6 @@ button:active{transform: translateY(0);}
 </div>
 
 <script>
-// --- Firebase Database Setup ---
-const firebaseConfig = {
-  apiKey: "AIzaSyAA2tjh31LUxPrPRVrN7Sm2FU63KwE0Pdw",
-  authDomain: "flamingo-web-1c337.firebaseapp.com",
-  projectId: "flamingo-web-1c337",
-  storageBucket: "flamingo-web-1c337.firebasestorage.app",
-  messagingSenderId: "715648111180",
-  appId: "1:715648111180:web:684d94a7236f2617935ae9"
-};
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-
-// --- App State ---
-let users = [];
-let orders = [];
-let suspendedOrders = [];
-let currentItems = [];
-let editingSuspendedId = null;
-let currentUser = null;
-
 // --- Helper Functions ---
 function toEnglishNumbers(str) {
   const arabicNumbers = ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'];
@@ -443,70 +479,17 @@ function toEnglishNumbers(str) {
   return res;
 }
 
-function itemTotal(x) { return (x.weight && x.weight > 0 ? (x.weight / 1000) : 1) * x.price * x.qty; }
+let users = JSON.parse(localStorage.getItem("oms_users_v11")) || [
+  { code: 'admin', password: 'admin', name: 'مدير النظام (Team Manager)', role: 'manager' },
+  { code: '1', password: '123456789', name: 'عمر الزناتي', role: 'cashier' }
+];
+let currentUser = null;
 
-function now() {
-  let d = new Date();
-  let dStr = d.toLocaleDateString("en-GB"); 
-  let tStr = d.toLocaleTimeString("ar-EG", {hour:"2-digit",minute:"2-digit"});
-  return dStr + " - " + tStr;
-}
+let orders = JSON.parse(localStorage.getItem("oms_orders_v11") || "[]");
+let suspendedOrders = JSON.parse(localStorage.getItem("oms_suspended_v11") || "[]");
+let currentItems = [];
+let editingSuspendedId = null;
 
-function esc(s) {
-  return String(s ?? "").replace(/[&<>"']/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
-}
-
-// --- Cloud Real-time Sync ---
-db.collection("users").onSnapshot(snapshot => {
-  let loadedUsers = [];
-  snapshot.forEach(doc => loadedUsers.push(doc.data()));
-  if(loadedUsers.length === 0) {
-    let defaultAdmin = { code: 'admin', password: 'admin', name: 'مدير النظام (Team Manager)', role: 'manager' };
-    db.collection("users").doc("admin").set(defaultAdmin);
-    users = [defaultAdmin];
-  } else {
-    users = loadedUsers;
-  }
-  renderUsersList();
-});
-
-db.collection("orders").onSnapshot(snapshot => {
-  orders = [];
-  let maxId = 99;
-  snapshot.forEach(doc => {
-    let o = doc.data();
-    orders.push(o);
-    if(parseInt(o.id) > maxId) maxId = parseInt(o.id);
-  });
-  orders.sort((a,b) => b.id - a.id);
-  localStorage.setItem("oms_seq_v11", maxId); 
-  
-  if(document.getElementById('tab-search').style.display === 'block') renderHistory();
-  if(document.getElementById('tab-cancel').style.display === 'block') renderCancelList();
-  if(document.getElementById('tab-reports').style.display === 'block') updateStats();
-});
-
-db.collection("suspended").onSnapshot(snapshot => {
-  suspendedOrders = [];
-  snapshot.forEach(doc => {
-    suspendedOrders.push(doc.data());
-  });
-  suspendedOrders.sort((a,b) => b.id - a.id);
-  if(document.getElementById('tab-suspended').style.display === 'block') renderSuspended();
-});
-
-function getNextId() {
-  let seq = parseInt(localStorage.getItem("oms_seq_v11"));
-  if (isNaN(seq) || seq < 99) { seq = 99; }
-  return seq + 1;
-}
-function incrementId() {
-  let n = getNextId(); 
-  localStorage.setItem("oms_seq_v11", n); 
-  return n;
-}
-
-// --- Auth & Users ---
 function attemptLogin() {
   let code = toEnglishNumbers(document.getElementById("loginCode").value.trim());
   let pwd = toEnglishNumbers(document.getElementById("loginPassword").value.trim());
@@ -515,38 +498,26 @@ function attemptLogin() {
   let user = users.find(u => u.code === code && u.password === pwd);
   if(user) {
     currentUser = user;
-    sessionStorage.setItem("oms_current_user_v11", JSON.stringify(currentUser));
-    
     errorMsg.style.display = 'none';
+    document.getElementById("login-screen").style.display = 'none';
+    document.getElementById("main-app").style.display = 'flex';
+    
+    document.getElementById("displayUserName").textContent = user.name;
+    document.getElementById("displayUserRole").textContent = user.role === 'manager' ? "(مدير النظام)" : "(كاشير)";
+    
+    let managerElements = document.querySelectorAll(".manager-only");
+    managerElements.forEach(el => el.style.display = (user.role === 'manager') ? 'block' : 'none');
+    
     document.getElementById("loginCode").value = '';
     document.getElementById("loginPassword").value = '';
-    
-    sessionStorage.setItem("oms_active_tab_v11", 'tab-new');
-    initAppUI();
+    switchTab('tab-new');
   } else {
     errorMsg.style.display = 'block';
   }
 }
 
-function initAppUI() {
-    document.getElementById("login-screen").style.display = 'none';
-    document.getElementById("main-app").style.display = 'flex';
-    
-    document.getElementById("displayUserName").textContent = currentUser.name;
-    document.getElementById("displayUserRole").textContent = currentUser.role === 'manager' ? "(مدير النظام)" : "(كاشير)";
-    
-    let managerElements = document.querySelectorAll(".manager-only");
-    managerElements.forEach(el => el.style.display = (currentUser.role === 'manager') ? 'block' : 'none');
-    
-    let lastTab = sessionStorage.getItem("oms_active_tab_v11") || 'tab-new';
-    switchTab(lastTab);
-    if(lastTab === 'tab-new') { clearOrder(); }
-}
-
 function logout() {
   currentUser = null;
-  sessionStorage.removeItem("oms_current_user_v11"); 
-  sessionStorage.removeItem("oms_active_tab_v11"); 
   document.getElementById("main-app").style.display = 'none';
   document.getElementById("login-screen").style.display = 'flex';
 }
@@ -554,14 +525,13 @@ function logout() {
 function saveNewPassword() {
   let newP = document.getElementById("newPwd").value.trim();
   if(!newP) { alert("برجاء كتابة باسورد جديد"); return; }
-  let u = users.find(u => u.code === currentUser.code);
-  if(u) {
-    u.password = newP;
-    db.collection("users").doc(u.code).set(u).then(() => {
-        alert("تم تغيير كلمة المرور بنجاح!");
-        document.getElementById('pwdModal').style.display = 'none';
-        document.getElementById("newPwd").value = '';
-    });
+  let uIndex = users.findIndex(u => u.code === currentUser.code);
+  if(uIndex > -1) {
+    users[uIndex].password = newP;
+    localStorage.setItem("oms_users_v11", JSON.stringify(users));
+    alert("تم تغيير كلمة المرور بنجاح!");
+    document.getElementById('pwdModal').style.display = 'none';
+    document.getElementById("newPwd").value = '';
   }
 }
 
@@ -572,14 +542,13 @@ function createNewUser() {
   let p = document.getElementById("newUserPwd").value.trim();
   if(!n || !c || !p) { alert("أكمل جميع البيانات"); return; }
   if(users.find(u => u.code === c)) { alert("هذا الكود مستخدم بالفعل! اختر كود آخر."); return; }
-  
-  let newUser = { name: n, code: c, password: p, role: 'cashier' };
-  db.collection("users").doc(c).set(newUser).then(() => {
-      document.getElementById("newUserName").value = "";
-      document.getElementById("newUserCode").value = "";
-      document.getElementById("newUserPwd").value = "";
-      alert("تم إضافة الموظف بنجاح!");
-  });
+  users.push({ name: n, code: c, password: p, role: 'cashier' });
+  localStorage.setItem("oms_users_v11", JSON.stringify(users));
+  document.getElementById("newUserName").value = "";
+  document.getElementById("newUserCode").value = "";
+  document.getElementById("newUserPwd").value = "";
+  alert("تم إضافة الموظف بنجاح!");
+  renderUsersList();
 }
 
 function renderUsersList() {
@@ -589,27 +558,61 @@ function renderUsersList() {
       <td>${esc(u.name)}</td>
       <td><b>${esc(u.code)}</b></td>
       <td>${u.role === 'manager' ? '<span style="color:var(--pink); font-weight:bold;">مدير</span>' : 'كاشير'}</td>
-      <td>${u.code !== 'admin' ? `<button class="danger" style="padding:6px 12px" onclick="deleteUser('${u.code}')">حذف</button>` : '-'}</td>
+      <td>${u.code !== 'admin' ? `<button class="danger" style="padding:6px 12px" onclick="deleteUser(${i})">حذف</button>` : '-'}</td>
     </tr>
   `).join("");
 }
 
-function deleteUser(code) {
-  if (code === 'admin') return;
+function deleteUser(index) {
+  if (users[index].code === 'admin') return;
   if(confirm("حذف هذا الموظف؟ لن يتمكن من الدخول مجدداً.")) {
-    db.collection("users").doc(code).delete();
+    users.splice(index, 1);
+    localStorage.setItem("oms_users_v11", JSON.stringify(users));
+    renderUsersList();
   }
 }
 
-// --- Navigation & Core App ---
+function itemTotal(x) { return (x.weight && x.weight > 0 ? (x.weight / 1000) : 1) * x.price * x.qty; }
+function saveData() {
+  localStorage.setItem("oms_orders_v11", JSON.stringify(orders));
+  localStorage.setItem("oms_suspended_v11", JSON.stringify(suspendedOrders));
+}
+
+function getNextId() {
+  return parseInt(localStorage.getItem("oms_seq_v11") || "99") + 1;
+}
+function incrementId() {
+  let n = getNextId();
+  localStorage.setItem("oms_seq_v11", n);
+  return n;
+}
+function now() {
+  let d = new Date();
+  let dStr = d.toLocaleDateString("en-GB"); 
+  let tStr = d.toLocaleTimeString("ar-EG", {hour:"2-digit",minute:"2-digit"});
+  return dStr + " - " + tStr;
+}
+function esc(s) {
+  return String(s ?? "").replace(/[&<>"']/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
+}
+
+setInterval(() => {
+    let currentId = document.getElementById("orderId").value;
+    let isViewingExisting = orders.findIndex(x => x.id == currentId) > -1;
+    let isNewScreen = document.getElementById('tab-new').style.display === 'block';
+    
+    if (!editingSuspendedId && !isViewingExisting && isNewScreen) {
+        document.getElementById("orderDate").value = now();
+        renderReceipt();
+    }
+}, 5000); 
+
 function switchTab(tabId) {
   document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
   document.querySelectorAll('.nav button').forEach(el => el.classList.remove('active'));
   document.getElementById(tabId).style.display = 'block';
   let activeBtn = document.getElementById('btn-' + tabId);
   if(activeBtn) activeBtn.classList.add('active');
-  
-  sessionStorage.setItem("oms_active_tab_v11", tabId);
   
   if(tabId === 'tab-suspended') renderSuspended();
   if(tabId === 'tab-search') renderHistory();
@@ -620,10 +623,8 @@ function switchTab(tabId) {
 
 function clearOrder() {
   editingSuspendedId = null;
-  let nextId = getNextId(); 
-  
-  document.getElementById("orderId").value = nextId;
-  document.getElementById("windowNum").value = nextId - 99; 
+  document.getElementById("orderId").value = getNextId();
+  document.getElementById("windowNum").value = getNextId() - 99;
   document.getElementById("orderDate").value = now();
   
   ["customer", "phone", "area", "address", "notes", "productName", "weight", "itemNote"].forEach(x => {
@@ -635,7 +636,7 @@ function clearOrder() {
   currentItems = [];
   renderItems();
   renderReceipt();
-  document.getElementById("customer").focus(); 
+  document.getElementById("customer").focus();
 }
 
 function addItem() {
@@ -702,8 +703,9 @@ function renderReceipt() {
   document.getElementById("receipt").innerHTML = `
     <div style="text-align:center; margin-bottom:12px;">
       <h2 style="margin:0; font-size:28px; font-weight:900; color:#000; letter-spacing:-1px;">فلامنجو</h2>
-      <div style="font-size:11px; font-weight:bold; letter-spacing:1px; color:#333; border-top:1px solid #000; display:inline-block; padding-top:4px; margin-top:2px;">CLOUD POS</div>
+      <div style="font-size:11px; font-weight:bold; letter-spacing:1px; color:#333; border-top:1px solid #000; display:inline-block; padding-top:4px; margin-top:2px;">HYPER MARKET</div>
     </div>
+    
     <div class="rid">شباك #${esc(wNum)}</div>
     <div style="text-align:center;font-size:14px;margin-bottom:3px;font-weight:bold;">أوردر رقم: #${esc(id)}</div>
     <div style="text-align:center;font-size:12px;margin-bottom:6px; font-weight: bold;">التاريخ: ${esc(dt)}</div>
@@ -717,7 +719,13 @@ function renderReceipt() {
     <div class="sep"></div>
     <table class="rtable">
       <thead>
-        <tr><th style="width:36%">الصنف</th><th style="width:14%">كمية</th><th style="width:16%">وزن</th><th style="width:16%">سعر</th><th style="width:18%">إجمالي</th></tr>
+        <tr>
+          <th style="width:34%">الصنف</th>
+          <th style="width:13%">كمية</th>
+          <th style="width:15%">وزن</th>
+          <th style="width:16%">سعر</th>
+          <th style="width:22%">إجمالي</th>
+        </tr>
       </thead>
       <tbody>${rows || '<tr><td colspan="5" style="text-align:center">لم تتم إضافة أصناف</td></tr>'}</tbody>
     </table>
@@ -734,6 +742,12 @@ function collectData() {
   let cId = document.getElementById("orderId").value;
   let cWindow = document.getElementById("windowNum").value;
   let cDate = document.getElementById("orderDate").value;
+  
+  let existingIndex = orders.findIndex(x => x.id == cId);
+  if (!editingSuspendedId && existingIndex === -1) {
+      cDate = now();
+      document.getElementById("orderDate").value = cDate; 
+  }
   
   if (!cId) { cId = getNextId(); document.getElementById("orderId").value = cId; }
   if (!cWindow) { cWindow = getNextId() - 99; document.getElementById("windowNum").value = cWindow; }
@@ -755,87 +769,82 @@ function collectData() {
   };
 }
 
-function validateInput() {
-  if(!document.getElementById("customer").value.trim() && !document.getElementById("phone").value.trim()) { 
-    alert("برجاء كتابة اسم العميل أو رقم الموبايل."); return false; 
+function performSave() {
+  if(!document.getElementById("customer").value.trim() && !document.getElementById("phone").value.trim() && currentItems.length === 0) { 
+      alert("برجاء كتابة بيانات العميل أو إضافة أصناف."); 
+      return false; 
   }
-  if(!currentItems.length) { 
-    alert("برجاء إضافة صنف واحد على الأقل."); return false; 
+
+  let currentId = document.getElementById("orderId").value;
+  let existingIndex = orders.findIndex(x => x.id == currentId);
+  
+  if(!editingSuspendedId && existingIndex === -1) {
+      incrementId(); 
   }
+  
+  let o = collectData();
+  
+  if(editingSuspendedId) {
+    suspendedOrders = suspendedOrders.filter(x => x.id !== editingSuspendedId);
+    editingSuspendedId = null;
+  }
+  
+  if(existingIndex > -1) { orders[existingIndex] = o; } else { orders.unshift(o); }
+  
+  saveData(); 
   return true;
 }
 
-// --- Cloud Save Methods ---
+function saveOrderAction() {
+  if(performSave()) {
+      alert("تم حفظ الأوردر بنجاح!");
+      clearOrder(); 
+  }
+}
+
+function saveAndPrintAction() {
+  if(performSave()) {
+      renderReceipt();
+      setTimeout(() => {
+          window.print();
+          clearOrder(); 
+      }, 300);
+  }
+}
+
 function suspendOrder() {
   if(!document.getElementById("customer").value.trim() && !document.getElementById("phone").value.trim() && currentItems.length === 0) { alert("لا يوجد بيانات لتعليقها!"); return; }
   
   let currentId = document.getElementById("orderId").value;
-  let isNew = (!editingSuspendedId && orders.findIndex(x => x.id == currentId) === -1);
-  if(isNew) { incrementId(); }
+  let existingOrderIndex = orders.findIndex(x => x.id == currentId);
+  let existingSuspIndex = suspendedOrders.findIndex(x => x.id == currentId);
   
+  if (!editingSuspendedId && existingOrderIndex === -1 && existingSuspIndex === -1) {
+      incrementId(); 
+  }
+
   let o = collectData();
   
-  if(editingSuspendedId) {
-    db.collection("suspended").doc(String(editingSuspendedId)).delete();
-  }
+  if(editingSuspendedId) { suspendedOrders = suspendedOrders.filter(x => x.id !== editingSuspendedId); }
+  else if (existingSuspIndex > -1) { suspendedOrders.splice(existingSuspIndex, 1); }
   
-  db.collection("suspended").doc(String(o.id)).set(o).then(() => {
-    clearOrder();
-    alert("تم تعليق الأوردر بنجاح!");
-  });
+  suspendedOrders.unshift(o);
+  saveData(); 
+  alert("تم تعليق الأوردر بنجاح!");
+  clearOrder(); 
 }
 
-function saveOrder(isPrint = false) {
-  if(!validateInput()) return;
-  
-  let currentId = document.getElementById("orderId").value;
-  let isNew = (!editingSuspendedId && orders.findIndex(x => x.id == currentId) === -1);
-  if(isNew) { incrementId(); document.getElementById("orderId").value = currentId; } 
-  
-  let o = collectData();
-  
-  if(editingSuspendedId) {
-    db.collection("suspended").doc(String(editingSuspendedId)).delete();
-    editingSuspendedId = null;
-  }
-  
-  db.collection("orders").doc(String(o.id)).set(o).then(() => {
-    if(!isPrint) { clearOrder(); alert("تم حفظ الأوردر بنجاح!"); }
-  }).catch(err => alert("حدث خطأ في الحفظ: " + err.message));
-}
-
-function saveAndPrint() {
-  if(!validateInput()) return;
-  
-  let currentId = document.getElementById("orderId").value;
-  let isNew = (!editingSuspendedId && orders.findIndex(x => x.id == currentId) === -1);
-  if(isNew) { incrementId(); document.getElementById("orderId").value = currentId; }
-  
-  let o = collectData();
-  
-  if(editingSuspendedId) {
-    db.collection("suspended").doc(String(editingSuspendedId)).delete();
-    editingSuspendedId = null;
-  }
-  
-  db.collection("orders").doc(String(o.id)).set(o).then(() => {
-    setTimeout(() => window.print(), 300);
-    setTimeout(clearOrder, 1500);
-  }).catch(err => alert("حدث خطأ: " + err.message));
-}
-
-// --- Read & Render Methods ---
 function getFilteredList(rawList) {
-  if(currentUser && currentUser.role === 'manager') return rawList;
-  if(currentUser) return rawList.filter(x => x.cashierCode === currentUser.code);
-  return [];
+  if(currentUser.role === 'manager') return rawList;
+  return rawList.filter(x => x.cashierCode === currentUser.code);
 }
 
 function renderSuspended() {
   let list = getFilteredList(suspendedOrders);
   let b = document.getElementById("suspendedBody");
   if(list.length === 0) { b.innerHTML = `<tr><td colspan="6">لا توجد أوردرات معلقة حالياً.</td></tr>`; return; }
-  b.innerHTML = list.map((o, index) => {
+  b.innerHTML = list.map((o) => {
+    let rawIndex = suspendedOrders.findIndex(x => x.id === o.id);
     let totalP = o.items.reduce((acc, x) => acc + itemTotal(x), 0);
     return `<tr>
       <td style="font-size:13px">${esc(o.date || 'بدون تاريخ')}</td>
@@ -844,16 +853,15 @@ function renderSuspended() {
       <td>${o.items ? o.items.length : 0}</td>
       <td style="color:var(--pink);font-weight:bold; font-size:15px;">${totalP} ج.م</td>
       <td>
-        <button class="primary" style="padding:6px 12px; margin-bottom:4px;" onclick="resumeSuspended(${index})">استكمال</button>
-        <button class="danger" style="padding:6px 12px;" onclick="deleteSuspended('${o.id}')">حذف</button>
+        <button class="primary" style="padding:6px 12px; margin-bottom:4px;" onclick="resumeSuspended(${rawIndex})">استكمال</button>
+        <button class="danger" style="padding:6px 12px;" onclick="deleteSuspended(${rawIndex})">حذف</button>
       </td>
     </tr>`;
   }).join("");
 }
 
 function resumeSuspended(index) {
-  let list = getFilteredList(suspendedOrders);
-  let o = list[index];
+  let o = suspendedOrders[index];
   editingSuspendedId = o.id || getNextId();
   document.getElementById("orderId").value = o.id || editingSuspendedId;
   document.getElementById("orderDate").value = o.date || now();
@@ -866,14 +874,15 @@ function resumeSuspended(index) {
   switchTab('tab-new'); renderItems(); renderReceipt();
 }
 
-function deleteSuspended(id) {
+function deleteSuspended(index) {
   if(confirm("هل أنت متأكد من حذف هذا الأوردر المعلق؟")) {
-    db.collection("suspended").doc(String(id)).delete();
+    suspendedOrders.splice(index, 1); saveData(); renderSuspended();
   }
 }
 
 function renderHistory() {
   let q = (document.getElementById("historySearch").value || "").trim().toLowerCase();
+  
   let list = getFilteredList(orders).filter(o => {
       let searchableStr = [String(o.id), String(o.windowNum), String(o.date), String(o.customer), String(o.phone), String(o.area)].join(" ").toLowerCase();
       return !q || searchableStr.includes(q);
@@ -913,6 +922,7 @@ function loadOrderToPrint(id) {
 
 function renderCancelList() {
   let q = (document.getElementById("cancelSearch").value || "").trim().toLowerCase();
+  
   let list = getFilteredList(orders).filter(o => {
       let searchableStr = [String(o.id), String(o.windowNum), String(o.date), String(o.customer), String(o.phone), String(o.area)].join(" ").toLowerCase();
       return !q || searchableStr.includes(q);
@@ -935,13 +945,10 @@ function renderCancelList() {
 
 function deleteOrderForever(id) {
   if(confirm("⚠️ هل أنت متأكد من حذف هذا الأوردر نهائياً؟ هذا الإجراء لا يمكن التراجع عنه.")) {
-    db.collection("orders").doc(String(id)).delete().then(() => {
-        if (document.getElementById('tab-new').style.display === 'block') { clearOrder(); }
-    });
+    orders = orders.filter(x => x.id != id); saveData(); renderCancelList();
   }
 }
 
-// --- Reports ---
 let filteredOrdersForReport = [];
 function getOrderISODate(o) {
   if (o.isoDate) return o.isoDate.split("T")[0];
@@ -1003,7 +1010,7 @@ function exportToExcel() {
   });
   let link = document.createElement("a");
   link.href = URL.createObjectURL(new Blob([csvContent], { type: 'text/csv;charset=utf-8;' }));
-  link.download = "Flamingo_Cloud_Reports_" + new Date().toISOString().split('T')[0] + ".csv";
+  link.download = "Flamingo_Reports_" + new Date().toISOString().split('T')[0] + ".csv";
   link.click();
 }
 
@@ -1011,25 +1018,7 @@ function exportToExcel() {
   document.getElementById(x).addEventListener("input", renderReceipt);
 });
 
-setInterval(() => {
-    let isNewScreen = document.getElementById('tab-new').style.display === 'block';
-    if (!editingSuspendedId && isNewScreen) {
-        document.getElementById("orderDate").value = now();
-        renderReceipt();
-    }
-}, 5000); 
-
-function checkSessionAndInit() {
-    let savedUser = sessionStorage.getItem("oms_current_user_v11");
-    if(savedUser) {
-        currentUser = JSON.parse(savedUser);
-        initAppUI(); 
-    } else {
-        document.getElementById("main-app").style.display = 'none';
-        document.getElementById("login-screen").style.display = 'flex';
-    }
-}
-checkSessionAndInit();
+document.getElementById("main-app").style.display = 'none';
 </script>
 </body>
 </html>
