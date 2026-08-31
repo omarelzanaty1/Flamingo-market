@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>فلامنجو هايبر ماركت - إدارة الأوردرات</title>
+<title>فلامنجو هايبر ماركت - السحابي</title>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -239,7 +239,7 @@ button:active{transform: translateY(0);}
     <!-- URL DIRECT LOGO FIX -->
     <div style="text-align:center; margin-bottom:15px;">
       <h1 style="margin:0; color:var(--navy); font-size:28px; font-weight:800; letter-spacing: -1px;">فلامنجو</h1>
-      <div style="font-size:12px; color:var(--pink); font-weight:bold; letter-spacing:1px; margin-top:4px;">HYPER MARKET</div>
+      <div style="font-size:12px; color:var(--pink); font-weight:bold; letter-spacing:1px; margin-top:4px;">CLOUD POS</div>
     </div>
     
     <div id="loginError" class="login-error">الكود أو كلمة المرور غير صحيحة!</div>
@@ -279,7 +279,7 @@ button:active{transform: translateY(0);}
     <!-- SIDEBAR LOGO FIX -->
     <div class="logo">
       <h2 style="margin:0; color:#fff; font-size:24px; font-weight:800;">فلامنجو</h2>
-      <div style="font-size:11px; color:var(--pink); font-weight:bold; letter-spacing:1px; margin-top:4px;">HYPER MARKET</div>
+      <div style="font-size:11px; color:var(--pink); font-weight:bold; letter-spacing:1px; margin-top:4px;">CLOUD POS</div>
     </div>
 
     <div class="user-info">
@@ -479,14 +479,14 @@ function toEnglishNumbers(str) {
   return res;
 }
 
-let users = JSON.parse(localStorage.getItem("oms_users_v11")) || [
+let users = JSON.parse(localStorage.getItem("oms_users_v18")) || [
   { code: 'admin', password: 'admin', name: 'مدير النظام (Team Manager)', role: 'manager' },
   { code: '1', password: '123456789', name: 'عمر الزناتي', role: 'cashier' }
 ];
 let currentUser = null;
 
-let orders = JSON.parse(localStorage.getItem("oms_orders_v11") || "[]");
-let suspendedOrders = JSON.parse(localStorage.getItem("oms_suspended_v11") || "[]");
+let orders = JSON.parse(localStorage.getItem("oms_orders_v18") || "[]");
+let suspendedOrders = JSON.parse(localStorage.getItem("oms_suspended_v18") || "[]");
 let currentItems = [];
 let editingSuspendedId = null;
 
@@ -528,7 +528,7 @@ function saveNewPassword() {
   let uIndex = users.findIndex(u => u.code === currentUser.code);
   if(uIndex > -1) {
     users[uIndex].password = newP;
-    localStorage.setItem("oms_users_v11", JSON.stringify(users));
+    localStorage.setItem("oms_users_v18", JSON.stringify(users));
     alert("تم تغيير كلمة المرور بنجاح!");
     document.getElementById('pwdModal').style.display = 'none';
     document.getElementById("newPwd").value = '';
@@ -543,7 +543,7 @@ function createNewUser() {
   if(!n || !c || !p) { alert("أكمل جميع البيانات"); return; }
   if(users.find(u => u.code === c)) { alert("هذا الكود مستخدم بالفعل! اختر كود آخر."); return; }
   users.push({ name: n, code: c, password: p, role: 'cashier' });
-  localStorage.setItem("oms_users_v11", JSON.stringify(users));
+  localStorage.setItem("oms_users_v18", JSON.stringify(users));
   document.getElementById("newUserName").value = "";
   document.getElementById("newUserCode").value = "";
   document.getElementById("newUserPwd").value = "";
@@ -567,65 +567,63 @@ function deleteUser(index) {
   if (users[index].code === 'admin') return;
   if(confirm("حذف هذا الموظف؟ لن يتمكن من الدخول مجدداً.")) {
     users.splice(index, 1);
-    localStorage.setItem("oms_users_v11", JSON.stringify(users));
+    localStorage.setItem("oms_users_v18", JSON.stringify(users));
     renderUsersList();
   }
 }
 
 function itemTotal(x) { return (x.weight && x.weight > 0 ? (x.weight / 1000) : 1) * x.price * x.qty; }
 function saveData() {
-  localStorage.setItem("oms_orders_v11", JSON.stringify(orders));
-  localStorage.setItem("oms_suspended_v11", JSON.stringify(suspendedOrders));
+  localStorage.setItem("oms_orders_v18", JSON.stringify(orders));
+  localStorage.setItem("oms_suspended_v18", JSON.stringify(suspendedOrders));
 }
 
+// --- FIXED AUTO INCREMENT ID & WINDOW LOGIC ---
 function getNextId() {
-  return parseInt(localStorage.getItem("oms_seq_v11") || "99") + 1;
+  let seq = localStorage.getItem("oms_seq_v18");
+  if (!seq) {
+    // Start from 100 if no sequence exists
+    seq = "99";
+    localStorage.setItem("oms_seq_v18", seq);
+  }
+  return parseInt(seq) + 1;
 }
+
 function incrementId() {
-  let n = getNextId();
-  localStorage.setItem("oms_seq_v11", n);
-  return n;
+  let current = getNextId();
+  localStorage.setItem("oms_seq_v18", current);
+  return current;
 }
+
 function now() {
   let d = new Date();
   let dStr = d.toLocaleDateString("en-GB"); 
   let tStr = d.toLocaleTimeString("ar-EG", {hour:"2-digit",minute:"2-digit"});
   return dStr + " - " + tStr;
 }
+
 function esc(s) {
   return String(s ?? "").replace(/[&<>"']/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
 }
 
-setInterval(() => {
-    let currentId = document.getElementById("orderId").value;
-    let isViewingExisting = orders.findIndex(x => x.id == currentId) > -1;
-    let isNewScreen = document.getElementById('tab-new').style.display === 'block';
-    
-    if (!editingSuspendedId && !isViewingExisting && isNewScreen) {
-        document.getElementById("orderDate").value = now();
-        renderReceipt();
-    }
-}, 5000); 
+// Initialize fresh order numbers on page load
+window.addEventListener('DOMContentLoaded', () => {
+    initNewOrderFields();
+});
 
-function switchTab(tabId) {
-  document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
-  document.querySelectorAll('.nav button').forEach(el => el.classList.remove('active'));
-  document.getElementById(tabId).style.display = 'block';
-  let activeBtn = document.getElementById('btn-' + tabId);
-  if(activeBtn) activeBtn.classList.add('active');
-  
-  if(tabId === 'tab-suspended') renderSuspended();
-  if(tabId === 'tab-search') renderHistory();
-  if(tabId === 'tab-cancel') renderCancelList();
-  if(tabId === 'tab-reports') updateStats();
-  if(tabId === 'tab-users') renderUsersList();
+function initNewOrderFields() {
+    let nextNum = getNextId();
+    document.getElementById("orderId").value = nextNum;
+    // Window number dynamically cycles or offsets from ID (e.g. ID 100 -> Window 1, ID 101 -> Window 2, or modulo/calculated)
+    let windowCalc = ((nextNum - 100) % 10) + 1; 
+    document.getElementById("windowNum").value = windowCalc;
+    document.getElementById("orderDate").value = now();
+    renderReceipt();
 }
 
 function clearOrder() {
   editingSuspendedId = null;
-  document.getElementById("orderId").value = getNextId();
-  document.getElementById("windowNum").value = getNextId() - 99;
-  document.getElementById("orderDate").value = now();
+  initNewOrderFields();
   
   ["customer", "phone", "area", "address", "notes", "productName", "weight", "itemNote"].forEach(x => {
       let el = document.getElementById(x);
@@ -636,7 +634,8 @@ function clearOrder() {
   currentItems = [];
   renderItems();
   renderReceipt();
-  document.getElementById("customer").focus();
+  let cust = document.getElementById("customer");
+  if(cust) cust.focus();
 }
 
 function addItem() {
@@ -681,7 +680,7 @@ function renderItems() {
 
 function renderReceipt() {
   let id = document.getElementById("orderId").value || getNextId();
-  let wNum = document.getElementById("windowNum").value || (getNextId() - 99);
+  let wNum = document.getElementById("windowNum").value || 1;
   let customer = document.getElementById("customer").value || "—";
   let phone = document.getElementById("phone").value || "—";
   let area = document.getElementById("area").value || "—";
@@ -703,7 +702,7 @@ function renderReceipt() {
   document.getElementById("receipt").innerHTML = `
     <div style="text-align:center; margin-bottom:12px;">
       <h2 style="margin:0; font-size:28px; font-weight:900; color:#000; letter-spacing:-1px;">فلامنجو</h2>
-      <div style="font-size:11px; font-weight:bold; letter-spacing:1px; color:#333; border-top:1px solid #000; display:inline-block; padding-top:4px; margin-top:2px;">HYPER MARKET</div>
+      <div style="font-size:11px; font-weight:bold; letter-spacing:1px; color:#333; border-top:1px solid #000; display:inline-block; padding-top:4px; margin-top:2px;">CLOUD POS</div>
     </div>
     
     <div class="rid">شباك #${esc(wNum)}</div>
@@ -739,29 +738,15 @@ function renderReceipt() {
 }
 
 function collectData() {
-  let cId = document.getElementById("orderId").value;
-  let cWindow = document.getElementById("windowNum").value;
-  let cDate = document.getElementById("orderDate").value;
-  
-  let existingIndex = orders.findIndex(x => x.id == cId);
-  if (!editingSuspendedId && existingIndex === -1) {
-      cDate = now();
-      document.getElementById("orderDate").value = cDate; 
-  }
-  
-  if (!cId) { cId = getNextId(); document.getElementById("orderId").value = cId; }
-  if (!cWindow) { cWindow = getNextId() - 99; document.getElementById("windowNum").value = cWindow; }
-  if (!cDate) { cDate = now(); document.getElementById("orderDate").value = cDate; }
-
   return {
-    id: cId,
-    windowNum: cWindow,
+    id: document.getElementById("orderId").value,
+    windowNum: document.getElementById("windowNum").value,
     customer: document.getElementById("customer").value.trim(),
     phone: document.getElementById("phone").value.trim(),
     area: document.getElementById("area").value.trim(),
     address: document.getElementById("address").value.trim(),
     notes: document.getElementById("notes").value.trim(),
-    date: cDate,
+    date: document.getElementById("orderDate").value,
     isoDate: new Date().toISOString(),
     items: JSON.parse(JSON.stringify(currentItems)),
     cashierCode: currentUser.code,
@@ -775,13 +760,10 @@ function performSave() {
       return false; 
   }
 
-  let currentId = document.getElementById("orderId").value;
-  let existingIndex = orders.findIndex(x => x.id == currentId);
-  
-  if(!editingSuspendedId && existingIndex === -1) {
-      incrementId(); 
-  }
-  
+  // 1. Permanently lock in and increment sequence ID so next order gets a fresh ID
+  incrementId();
+
+  // 2. Collect and push new order
   let o = collectData();
   
   if(editingSuspendedId) {
@@ -789,15 +771,14 @@ function performSave() {
     editingSuspendedId = null;
   }
   
-  if(existingIndex > -1) { orders[existingIndex] = o; } else { orders.unshift(o); }
-  
+  orders.unshift(o);
   saveData(); 
   return true;
 }
 
 function saveOrderAction() {
   if(performSave()) {
-      alert("تم حفظ الأوردر بنجاح!");
+      alert("تم حفظ الأوردر بنجاح برقم #" + document.getElementById("orderId").value);
       clearOrder(); 
   }
 }
@@ -815,18 +796,10 @@ function saveAndPrintAction() {
 function suspendOrder() {
   if(!document.getElementById("customer").value.trim() && !document.getElementById("phone").value.trim() && currentItems.length === 0) { alert("لا يوجد بيانات لتعليقها!"); return; }
   
-  let currentId = document.getElementById("orderId").value;
-  let existingOrderIndex = orders.findIndex(x => x.id == currentId);
-  let existingSuspIndex = suspendedOrders.findIndex(x => x.id == currentId);
-  
-  if (!editingSuspendedId && existingOrderIndex === -1 && existingSuspIndex === -1) {
-      incrementId(); 
-  }
-
+  incrementId();
   let o = collectData();
   
   if(editingSuspendedId) { suspendedOrders = suspendedOrders.filter(x => x.id !== editingSuspendedId); }
-  else if (existingSuspIndex > -1) { suspendedOrders.splice(existingSuspIndex, 1); }
   
   suspendedOrders.unshift(o);
   saveData(); 
@@ -862,10 +835,10 @@ function renderSuspended() {
 
 function resumeSuspended(index) {
   let o = suspendedOrders[index];
-  editingSuspendedId = o.id || getNextId();
-  document.getElementById("orderId").value = o.id || editingSuspendedId;
+  editingSuspendedId = o.id;
+  document.getElementById("orderId").value = o.id;
   document.getElementById("orderDate").value = o.date || now();
-  document.getElementById("windowNum").value = o.windowNum || (parseInt(o.id) - 99) || 1;
+  document.getElementById("windowNum").value = o.windowNum || 1;
   ["customer", "phone", "area", "address", "notes"].forEach(k => {
       let el = document.getElementById(k);
       if(el) el.value = o[k] || "";
@@ -909,9 +882,9 @@ function renderHistory() {
 function loadOrderToPrint(id) {
   let o = orders.find(x => x.id == id);
   if(!o) return;
-  document.getElementById("orderId").value = o.id || getNextId();
+  document.getElementById("orderId").value = o.id;
   document.getElementById("orderDate").value = o.date || now();
-  document.getElementById("windowNum").value = o.windowNum || (parseInt(o.id) - 99);
+  document.getElementById("windowNum").value = o.windowNum || 1;
   ["customer", "phone", "area", "address", "notes"].forEach(k => {
       let el = document.getElementById(k);
       if(el) el.value = o[k] || "";
