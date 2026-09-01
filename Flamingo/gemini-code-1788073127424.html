@@ -578,11 +578,9 @@ function saveData() {
   localStorage.setItem("oms_suspended_v18", JSON.stringify(suspendedOrders));
 }
 
-// --- FIXED AUTO INCREMENT ID & WINDOW LOGIC ---
 function getNextId() {
   let seq = localStorage.getItem("oms_seq_v18");
   if (!seq) {
-    // Start from 100 if no sequence exists
     seq = "99";
     localStorage.setItem("oms_seq_v18", seq);
   }
@@ -606,7 +604,24 @@ function esc(s) {
   return String(s ?? "").replace(/[&<>"']/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
 }
 
-// Initialize fresh order numbers on page load
+// --- TAB SWITCHING FIX (TASKBAR) ---
+function switchTab(tabId) {
+  document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+  document.querySelectorAll('.nav button').forEach(el => el.classList.remove('active'));
+  
+  let targetTab = document.getElementById(tabId);
+  if(targetTab) targetTab.style.display = 'block';
+  
+  let activeBtn = document.getElementById('btn-' + tabId);
+  if(activeBtn) activeBtn.classList.add('active');
+  
+  if(tabId === 'tab-suspended') renderSuspended();
+  if(tabId === 'tab-search') renderHistory();
+  if(tabId === 'tab-cancel') renderCancelList();
+  if(tabId === 'tab-reports') updateStats();
+  if(tabId === 'tab-users') renderUsersList();
+}
+
 window.addEventListener('DOMContentLoaded', () => {
     initNewOrderFields();
 });
@@ -614,7 +629,6 @@ window.addEventListener('DOMContentLoaded', () => {
 function initNewOrderFields() {
     let nextNum = getNextId();
     document.getElementById("orderId").value = nextNum;
-    // Window number dynamically cycles or offsets from ID (e.g. ID 100 -> Window 1, ID 101 -> Window 2, or modulo/calculated)
     let windowCalc = ((nextNum - 100) % 10) + 1; 
     document.getElementById("windowNum").value = windowCalc;
     document.getElementById("orderDate").value = now();
@@ -760,10 +774,7 @@ function performSave() {
       return false; 
   }
 
-  // 1. Permanently lock in and increment sequence ID so next order gets a fresh ID
   incrementId();
-
-  // 2. Collect and push new order
   let o = collectData();
   
   if(editingSuspendedId) {
@@ -990,8 +1001,6 @@ function exportToExcel() {
 ["customer", "phone", "area", "address", "notes"].forEach(x => {
   document.getElementById(x).addEventListener("input", renderReceipt);
 });
-
-document.getElementById("main-app").style.display = 'none';
 </script>
 </body>
 </html>
