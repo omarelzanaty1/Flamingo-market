@@ -479,14 +479,14 @@ function toEnglishNumbers(str) {
   return res;
 }
 
-let users = JSON.parse(localStorage.getItem("oms_users_v18")) || [
+let users = JSON.parse(localStorage.getItem("oms_users_v21")) || [
   { code: 'admin', password: 'admin', name: 'مدير النظام (Team Manager)', role: 'manager' },
   { code: '1', password: '123456789', name: 'عمر الزناتي', role: 'cashier' }
 ];
 let currentUser = null;
 
-let orders = JSON.parse(localStorage.getItem("oms_orders_v18") || "[]");
-let suspendedOrders = JSON.parse(localStorage.getItem("oms_suspended_v18") || "[]");
+let orders = JSON.parse(localStorage.getItem("oms_orders_v21") || "[]");
+let suspendedOrders = JSON.parse(localStorage.getItem("oms_suspended_v21") || "[]");
 let currentItems = [];
 let editingSuspendedId = null;
 
@@ -510,6 +510,9 @@ function attemptLogin() {
     
     document.getElementById("loginCode").value = '';
     document.getElementById("loginPassword").value = '';
+    
+    // Initialize order fields specific to this logged in cashier starting strictly from 100
+    initNewOrderFields();
     switchTab('tab-new');
   } else {
     errorMsg.style.display = 'block';
@@ -528,7 +531,7 @@ function saveNewPassword() {
   let uIndex = users.findIndex(u => u.code === currentUser.code);
   if(uIndex > -1) {
     users[uIndex].password = newP;
-    localStorage.setItem("oms_users_v18", JSON.stringify(users));
+    localStorage.setItem("oms_users_v21", JSON.stringify(users));
     alert("تم تغيير كلمة المرور بنجاح!");
     document.getElementById('pwdModal').style.display = 'none';
     document.getElementById("newPwd").value = '';
@@ -543,7 +546,7 @@ function createNewUser() {
   if(!n || !c || !p) { alert("أكمل جميع البيانات"); return; }
   if(users.find(u => u.code === c)) { alert("هذا الكود مستخدم بالفعل! اختر كود آخر."); return; }
   users.push({ name: n, code: c, password: p, role: 'cashier' });
-  localStorage.setItem("oms_users_v18", JSON.stringify(users));
+  localStorage.setItem("oms_users_v21", JSON.stringify(users));
   document.getElementById("newUserName").value = "";
   document.getElementById("newUserCode").value = "";
   document.getElementById("newUserPwd").value = "";
@@ -567,29 +570,35 @@ function deleteUser(index) {
   if (users[index].code === 'admin') return;
   if(confirm("حذف هذا الموظف؟ لن يتمكن من الدخول مجدداً.")) {
     users.splice(index, 1);
-    localStorage.setItem("oms_users_v18", JSON.stringify(users));
+    localStorage.setItem("oms_users_v21", JSON.stringify(users));
     renderUsersList();
   }
 }
 
 function itemTotal(x) { return (x.weight && x.weight > 0 ? (x.weight / 1000) : 1) * x.price * x.qty; }
 function saveData() {
-  localStorage.setItem("oms_orders_v18", JSON.stringify(orders));
-  localStorage.setItem("oms_suspended_v18", JSON.stringify(suspendedOrders));
+  localStorage.setItem("oms_orders_v21", JSON.stringify(orders));
+  localStorage.setItem("oms_suspended_v21", JSON.stringify(suspendedOrders));
 }
 
+// --- STRICT 100 STARTING SEQUENCE PER CASHIER ---
 function getNextId() {
-  let seq = localStorage.getItem("oms_seq_v18");
+  if (!currentUser) return 100;
+  let key = "oms_seq_v21_" + currentUser.code;
+  let seq = localStorage.getItem(key);
   if (!seq) {
+    // Explicitly initialize sequence counter so the very first order is 100
     seq = "99";
-    localStorage.setItem("oms_seq_v18", seq);
+    localStorage.setItem(key, seq);
   }
   return parseInt(seq) + 1;
 }
 
 function incrementId() {
+  if (!currentUser) return 100;
+  let key = "oms_seq_v21_" + currentUser.code;
   let current = getNextId();
-  localStorage.setItem("oms_seq_v18", current);
+  localStorage.setItem(key, current);
   return current;
 }
 
@@ -604,7 +613,7 @@ function esc(s) {
   return String(s ?? "").replace(/[&<>"']/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
 }
 
-// --- TAB SWITCHING FIX (TASKBAR) ---
+// --- TAB SWITCHING (TASKBAR) ---
 function switchTab(tabId) {
   document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
   document.querySelectorAll('.nav button').forEach(el => el.classList.remove('active'));
@@ -621,10 +630,6 @@ function switchTab(tabId) {
   if(tabId === 'tab-reports') updateStats();
   if(tabId === 'tab-users') renderUsersList();
 }
-
-window.addEventListener('DOMContentLoaded', () => {
-    initNewOrderFields();
-});
 
 function initNewOrderFields() {
     let nextNum = getNextId();
@@ -745,8 +750,8 @@ function renderReceipt() {
     <div class="rtotal">الإجمالي: ${totalVal} ج.م</div>
     ${notes ? `<div style="margin-top:8px;border:1px dashed #000;padding:6px;font-size:12px;"><b>ملاحظات:</b> ${esc(notes)}</div>` : ''}
     <div class="rmeta">
-      <span>الوقت: ${esc(new Date().toLocaleTimeString("ar-EG",{hour:"2-digit",minute:"2-digit"}))}</span>
       <span>الكاشير: ${esc(currentUser ? currentUser.name : 'Admin')}</span>
+      <span>الوقت: ${esc(new Date().toLocaleTimeString("ar-EG",{hour:"2-digit",minute:"2-digit"}))}</span>
     </div>
   `;
 }
@@ -818,9 +823,10 @@ function suspendOrder() {
   clearOrder(); 
 }
 
+// --- PERMISSION-BASED LIST FILTERING ---
 function getFilteredList(rawList) {
-  if(currentUser.role === 'manager') return rawList;
-  return rawList.filter(x => x.cashierCode === currentUser.code);
+  if(currentUser.role === 'manager') return rawList; // Manager sees ALL orders from everyone
+  return rawList.filter(x => x.cashierCode === currentUser.code); // Cashier sees ONLY their own orders
 }
 
 function renderSuspended() {
@@ -828,7 +834,7 @@ function renderSuspended() {
   let b = document.getElementById("suspendedBody");
   if(list.length === 0) { b.innerHTML = `<tr><td colspan="6">لا توجد أوردرات معلقة حالياً.</td></tr>`; return; }
   b.innerHTML = list.map((o) => {
-    let rawIndex = suspendedOrders.findIndex(x => x.id === o.id);
+    let rawIndex = suspendedOrders.findIndex(x => x.id === o.id && x.cashierCode === o.cashierCode);
     let totalP = o.items.reduce((acc, x) => acc + itemTotal(x), 0);
     return `<tr>
       <td style="font-size:13px">${esc(o.date || 'بدون تاريخ')}</td>
@@ -845,7 +851,9 @@ function renderSuspended() {
 }
 
 function resumeSuspended(index) {
-  let o = suspendedOrders[index];
+  let list = getFilteredList(suspendedOrders);
+  let o = list[index];
+  
   editingSuspendedId = o.id;
   document.getElementById("orderId").value = o.id;
   document.getElementById("orderDate").value = o.date || now();
@@ -860,7 +868,14 @@ function resumeSuspended(index) {
 
 function deleteSuspended(index) {
   if(confirm("هل أنت متأكد من حذف هذا الأوردر المعلق؟")) {
-    suspendedOrders.splice(index, 1); saveData(); renderSuspended();
+    let list = getFilteredList(suspendedOrders);
+    let o = list[index];
+    let realIndex = suspendedOrders.findIndex(x => x.id === o.id && x.cashierCode === o.cashierCode);
+    if(realIndex > -1) {
+      suspendedOrders.splice(realIndex, 1); 
+      saveData(); 
+      renderSuspended();
+    }
   }
 }
 
@@ -868,7 +883,7 @@ function renderHistory() {
   let q = (document.getElementById("historySearch").value || "").trim().toLowerCase();
   
   let list = getFilteredList(orders).filter(o => {
-      let searchableStr = [String(o.id), String(o.windowNum), String(o.date), String(o.customer), String(o.phone), String(o.area)].join(" ").toLowerCase();
+      let searchableStr = [String(o.id), String(o.windowNum), String(o.date), String(o.customer), String(o.phone), String(o.area), String(o.cashierName)].join(" ").toLowerCase();
       return !q || searchableStr.includes(q);
   });
   
@@ -884,14 +899,14 @@ function renderHistory() {
       <td>${esc(o.phone)}</td>
       <td><span style="background:#e8edf2; padding:2px 8px; border-radius:12px; font-weight:bold;">${o.items.reduce((a, x) => a + x.qty, 0)}</span></td>
       <td style="color:var(--pink);font-weight:bold">${totalP} ج.م</td>
-      <td style="font-size:12px; font-weight:bold;">${esc(o.cashierName || 'Admin')}</td>
-      <td><button class="primary" style="padding:4px 8px" onclick="loadOrderToPrint('${o.id}')">طباعة</button></td>
+      <td style="font-size:12px; font-weight:bold; color:var(--navy);">${esc(o.cashierName || 'Admin')}</td>
+      <td><button class="primary" style="padding:4px 8px" onclick="loadOrderToPrint('${o.id}', '${o.cashierCode}')">طباعة</button></td>
     </tr>`;
   }).join("");
 }
 
-function loadOrderToPrint(id) {
-  let o = orders.find(x => x.id == id);
+function loadOrderToPrint(id, cashierCode) {
+  let o = orders.find(x => x.id == id && x.cashierCode == cashierCode);
   if(!o) return;
   document.getElementById("orderId").value = o.id;
   document.getElementById("orderDate").value = o.date || now();
@@ -908,7 +923,7 @@ function renderCancelList() {
   let q = (document.getElementById("cancelSearch").value || "").trim().toLowerCase();
   
   let list = getFilteredList(orders).filter(o => {
-      let searchableStr = [String(o.id), String(o.windowNum), String(o.date), String(o.customer), String(o.phone), String(o.area)].join(" ").toLowerCase();
+      let searchableStr = [String(o.id), String(o.windowNum), String(o.date), String(o.customer), String(o.phone), String(o.area), String(o.cashierName)].join(" ").toLowerCase();
       return !q || searchableStr.includes(q);
   });
   
@@ -922,14 +937,16 @@ function renderCancelList() {
       <td style="font-weight:bold;">${esc(o.customer)}</td>
       <td>${esc(o.phone)}</td>
       <td style="color:var(--pink);font-weight:bold">${o.items.reduce((a, x) => a + itemTotal(x), 0)} ج.م</td>
-      <td><button class="danger" style="padding:4px 8px" onclick="deleteOrderForever('${o.id}')">حذف ❌</button></td>
+      <td><button class="danger" style="padding:4px 8px" onclick="deleteOrderForever('${o.id}', '${o.cashierCode}')">حذف ❌</button></td>
     </tr>
   `).join("");
 }
 
-function deleteOrderForever(id) {
+function deleteOrderForever(id, cashierCode) {
   if(confirm("⚠️ هل أنت متأكد من حذف هذا الأوردر نهائياً؟ هذا الإجراء لا يمكن التراجع عنه.")) {
-    orders = orders.filter(x => x.id != id); saveData(); renderCancelList();
+    orders = orders.filter(x => !(x.id == id && x.cashierCode == cashierCode)); 
+    saveData(); 
+    renderCancelList();
   }
 }
 
