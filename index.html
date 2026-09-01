@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>فلامنجو هايبر ماركت - السحابي الذكي</title>
+<title>فلامنجو هايبر ماركت - السحابي المستقر</title>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -280,9 +280,8 @@ button:active{transform: translateY(0);}
 
           <h3 style="margin-top:25px">إضافة صنف للأوردر</h3>
           <div class="addrow">
-            <!-- Smart Auto-complete product input -->
             <div style="position:relative;">
-              <input id="productName" type="text" list="suggestionsList" placeholder="اسم المنتج (اكتب وهتظهر اقتراحاتك السابقة)">
+              <input id="productName" type="text" list="suggestionsList" placeholder="اسم المنتج (اكتب للاقتراح)">
               <datalist id="suggestionsList"></datalist>
             </div>
             <input id="qty" type="number" min="1" value="1" placeholder="الكمية">
@@ -393,19 +392,18 @@ function toEnglishNumbers(str) {
   return res;
 }
 
-let users = JSON.parse(localStorage.getItem("oms_users_v23")) || [
+let users = JSON.parse(localStorage.getItem("oms_users_v24")) || [
   { code: 'admin', password: 'admin', name: 'مدير النظام (Team Manager)', role: 'manager' },
   { code: '1', password: '123456789', name: 'عمر الزناتي', role: 'cashier' }
 ];
 let currentUser = null;
 
-let orders = JSON.parse(localStorage.getItem("oms_orders_v23") || "[]");
-let suspendedOrders = JSON.parse(localStorage.getItem("oms_suspended_v23") || "[]");
+let orders = JSON.parse(localStorage.getItem("oms_orders_v24") || "[]");
+let suspendedOrders = JSON.parse(localStorage.getItem("oms_suspended_v24") || "[]");
 let currentItems = [];
 let editingSuspendedId = null;
 
-// Dynamic auto-complete product library learned from actual usage
-let productDatabase = JSON.parse(localStorage.getItem("oms_prods_v23") || '["مياه معدنية", "بيبسي لتر", "عيش بلدي", "جبنة رومي", "طماطم", "خيار", "بطاطس"]');
+let productDatabase = JSON.parse(localStorage.getItem("oms_prods_v24") || '["مياه معدنية", "بيبسي لتر", "عيش بلدي", "جبنة رومي", "طماطم", "خيار", "بطاطس"]');
 
 function updateSuggestions() {
   let list = document.getElementById("suggestionsList");
@@ -417,10 +415,29 @@ function updateSuggestions() {
 function rememberProduct(name) {
   if (name && !productDatabase.includes(name)) {
     productDatabase.push(name);
-    localStorage.setItem("oms_prods_v23", JSON.stringify(productDatabase));
+    localStorage.setItem("oms_prods_v24", JSON.stringify(productDatabase));
     updateSuggestions();
   }
 }
+
+// --- SESSION PERSISTENCE FIX (STAYS ON REFRESH) ---
+window.addEventListener('DOMContentLoaded', () => {
+    let savedUserJson = sessionStorage.getItem("oms_current_user_v24");
+    if (savedUserJson) {
+        currentUser = JSON.parse(savedUserJson);
+        document.getElementById("login-screen").style.display = 'none';
+        document.getElementById("main-app").style.display = 'flex';
+        document.getElementById("displayUserName").textContent = currentUser.name;
+        document.getElementById("displayUserRole").textContent = currentUser.role === 'manager' ? "(مدير النظام)" : "(كاشير)";
+        
+        let managerElements = document.querySelectorAll(".manager-only");
+        managerElements.forEach(el => el.style.display = (currentUser.role === 'manager') ? 'block' : 'none');
+        
+        updateSuggestions();
+        initNewOrderFields();
+        switchTab('tab-new');
+    }
+});
 
 function attemptLogin() {
   let code = toEnglishNumbers(document.getElementById("loginCode").value.trim());
@@ -430,6 +447,8 @@ function attemptLogin() {
   let user = users.find(u => u.code === code && u.password === pwd);
   if(user) {
     currentUser = user;
+    sessionStorage.setItem("oms_current_user_v24", JSON.stringify(user)); // Save session
+    
     errorMsg.style.display = 'none';
     document.getElementById("login-screen").style.display = 'none';
     document.getElementById("main-app").style.display = 'flex';
@@ -452,6 +471,7 @@ function attemptLogin() {
 
 function logout() {
   currentUser = null;
+  sessionStorage.removeItem("oms_current_user_v24");
   document.getElementById("main-app").style.display = 'none';
   document.getElementById("login-screen").style.display = 'flex';
 }
@@ -462,7 +482,7 @@ function saveNewPassword() {
   let uIndex = users.findIndex(u => u.code === currentUser.code);
   if(uIndex > -1) {
     users[uIndex].password = newP;
-    localStorage.setItem("oms_users_v23", JSON.stringify(users));
+    localStorage.setItem("oms_users_v24", JSON.stringify(users));
     alert("تم تغيير كلمة المرور بنجاح!");
     document.getElementById('pwdModal').style.display = 'none';
     document.getElementById("newPwd").value = '';
@@ -477,7 +497,7 @@ function createNewUser() {
   if(!n || !c || !p) { alert("أكمل جميع البيانات"); return; }
   if(users.find(u => u.code === c)) { alert("هذا الكود مستخدم بالفعل!"); return; }
   users.push({ name: n, code: c, password: p, role: 'cashier' });
-  localStorage.setItem("oms_users_v23", JSON.stringify(users));
+  localStorage.setItem("oms_users_v24", JSON.stringify(users));
   document.getElementById("newUserName").value = "";
   document.getElementById("newUserCode").value = "";
   document.getElementById("newUserPwd").value = "";
@@ -501,21 +521,21 @@ function deleteUser(index) {
   if (users[index].code === 'admin') return;
   if(confirm("حذف هذا الموظف؟")) {
     users.splice(index, 1);
-    localStorage.setItem("oms_users_v23", JSON.stringify(users));
+    localStorage.setItem("oms_users_v24", JSON.stringify(users));
     renderUsersList();
   }
 }
 
 function itemTotal(x) { return (x.weight && x.weight > 0 ? (x.weight / 1000) : 1) * x.price * x.qty; }
 function saveData() {
-  localStorage.setItem("oms_orders_v23", JSON.stringify(orders));
-  localStorage.setItem("oms_suspended_v23", JSON.stringify(suspendedOrders));
+  localStorage.setItem("oms_orders_v24", JSON.stringify(orders));
+  localStorage.setItem("oms_suspended_v24", JSON.stringify(suspendedOrders));
 }
 
 // --- STRICT 100 STARTING SEQUENCE PER CASHIER ---
 function getNextId() {
   if (!currentUser) return 100;
-  let key = "oms_seq_v23_" + currentUser.code;
+  let key = "oms_seq_v24_" + currentUser.code;
   let seq = localStorage.getItem(key);
   if (!seq) {
     seq = "99"; // Forces first order strictly to 100
@@ -526,7 +546,7 @@ function getNextId() {
 
 function incrementId() {
   if (!currentUser) return 100;
-  let key = "oms_seq_v23_" + currentUser.code;
+  let key = "oms_seq_v24_" + currentUser.code;
   let current = getNextId();
   localStorage.setItem(key, current);
   return current;
@@ -590,7 +610,7 @@ function addItem() {
   
   if(!name) { alert("اكتب اسم المنتج!"); document.getElementById("productName").focus(); return; }
   
-  rememberProduct(name); // Learn the product automatically for future auto-complete
+  rememberProduct(name);
   
   currentItems.push({ product: name, qty: q, weight: w, price: p, note: note });
   
@@ -818,9 +838,11 @@ function renderHistory() {
   }).join("");
 }
 
+// --- SECURE LOAD (DOES NOT HIJACK NEW ORDER COUNTER) ---
 function loadOrderToPrint(id, cashierCode) {
   let o = orders.find(x => x.id == id && x.cashierCode == cashierCode);
   if(!o) return;
+  // Just show preview in new tab or load into form without messing up active sequence counter
   document.getElementById("orderId").value = o.id;
   document.getElementById("windowNum").value = o.windowNum || 1;
   ["customer", "phone", "area", "address", "notes"].forEach(k => {
