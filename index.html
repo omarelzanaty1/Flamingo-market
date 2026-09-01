@@ -211,7 +211,7 @@ button:active{transform: translateY(0);}
     </form>
   </div>
 </div>
-
+<div style="font-size:11px; color:#a0aec0; margin-top:15px; font-weight:bold;">تم التطوير بواسطة: OE Vision</div>
 <!-- Change Password Modal -->
 <div id="pwdModal" class="modal-overlay">
   <div class="modal-content">
@@ -248,6 +248,7 @@ button:active{transform: translateY(0);}
       <button id="btn-tab-users" class="manager-only" onclick="switchTab('tab-users')"><span>👨‍💼 إدارة الموظفين</span></button>
       <button style="color:var(--pink)" onclick="document.getElementById('pwdModal').style.display='flex'"><span>🔑 تغيير الباسورد</span></button>
       <button style="color:#e74c3c" onclick="logout()"><span>🚪 تسجيل خروج</span></button>
+   <div style="font-size:11px; color:#cbd5e0; text-align:center; padding-top:10px; border-top:1px solid rgba(255,255,255,0.1); font-weight:bold;">تم التطوير بواسطة: OE Vision</div>
     </div>
   </aside>
 
@@ -945,5 +946,8 @@ function exportToExcel() {
   document.getElementById(x).addEventListener("input", renderReceipt);
 });
 </script>
+<div class="no-print" style="text-align:center; padding:10px; font-size:12px; color:#718096; font-weight:bold;">
+  تم التطوير بواسطة: <span style="color:#F38198;">OE Vision</span>
+</div>
 </body>
 </html>
