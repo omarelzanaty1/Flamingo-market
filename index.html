@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>فلامنجو هايبر ماركت - السحابي</title>
+<title>فلامنجو هايبر ماركت - السحابي الذكي</title>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -154,75 +154,33 @@ button:active{transform: translateY(0);}
   .stats { grid-template-columns: 1fr; gap: 10px; }
 }
 
-/* --- PRINT MEDIA QUERIES (DYNAMIC 100% TO FIT DRIVER EXACTLY) --- */
+/* --- PRINT MEDIA QUERIES --- */
 @page { margin: 0; }
 @media print{
   html, body {
-    width: 100% !important;
-    max-width: 100% !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    background: #fff !important; 
-    font-family: Tahoma, Arial, sans-serif !important;
-    direction: rtl !important;
-    display: block !important;
+    width: 100% !important; max-width: 100% !important; margin: 0 !important; padding: 0 !important;
+    background: #fff !important; font-family: Tahoma, Arial, sans-serif !important; direction: rtl !important; display: block !important;
   }
   body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  
-  /* Hide UI elements */
   #login-screen, .modal-overlay, .side, .top, .no-print, .nav, .actions, .card.formcard { display: none !important; }
-  
-  /* Reset Main wrapper */
   .app { display: block; min-height: 0; width: 100% !important;}
   .main { margin: 0 !important; padding: 0 !important; width: 100% !important; display: block !important;}
   .grid { display: block; gap: 0; width: 100% !important;}
   #tab-new { display: block !important; width: 100% !important;}
   .card:not(.formcard) { border: none !important; box-shadow: none !important; padding: 0 !important; margin-bottom: 0 !important; width: 100% !important;}
-  
-  /* Fix Receipt Wrapper */
-  .receipt-container { 
-      display: block !important; 
-      width: 100% !important; 
-      background: #fff !important; 
-      padding: 0 !important; 
-      margin: 0 !important; 
-  }
-  
-  /* FLUID WIDTH TO PREVENT CLIPPING */
+  .receipt-container { display: block !important; width: 100% !important; background: #fff !important; padding: 0 !important; margin: 0 !important; }
   .receipt {
-    display: block !important;
-    border: none !important;
-    box-shadow: none !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    box-sizing: border-box !important;
-    margin: 0 !important; 
-    padding: 0 4mm !important; /* Safe padding so text doesn't touch the exact physical edge */
-    min-height: 0 !important;
-    font-size: 12px !important;
-    line-height: 1.3 !important;
-    overflow: hidden !important; 
-    page-break-after: auto;
+    display: block !important; border: none !important; box-shadow: none !important; width: 100% !important; max-width: 100% !important;
+    box-sizing: border-box !important; margin: 0 !important; padding: 0 4mm !important; min-height: 0 !important; font-size: 12px !important; line-height: 1.3 !important; overflow: hidden !important; page-break-after: auto;
   }
-  
-  .receipt div, .receipt table, .receipt tr {
-    page-break-inside: avoid !important;
-  }
-  
+  .receipt div, .receipt table, .receipt tr { page-break-inside: avoid !important; }
   .rtable { width: 100% !important; table-layout: fixed !important; }
-  .rtable th, .rtable td {
-    border: 1px solid #444 !important;
-    padding: 3px 1px !important;
-    font-size: 11px !important; 
-    word-wrap: break-word !important;
-  }
-  /* Adjusted column ratios to ensure total has enough space */
-  .rtable th:nth-child(1), .rtable td:nth-child(1) { width: 34%; } /* Name */
-  .rtable th:nth-child(2), .rtable td:nth-child(2) { width: 13%; } /* Qty */
-  .rtable th:nth-child(3), .rtable td:nth-child(3) { width: 15%; } /* Weight */
-  .rtable th:nth-child(4), .rtable td:nth-child(4) { width: 16%; } /* Price */
-  .rtable th:nth-child(5), .rtable td:nth-child(5) { width: 22%; } /* Total */
-  
+  .rtable th, .rtable td { border: 1px solid #444 !important; padding: 3px 1px !important; font-size: 11px !important; word-wrap: break-word !important; }
+  .rtable th:nth-child(1), .rtable td:nth-child(1) { width: 34%; }
+  .rtable th:nth-child(2), .rtable td:nth-child(2) { width: 13%; }
+  .rtable th:nth-child(3), .rtable td:nth-child(3) { width: 15%; }
+  .rtable th:nth-child(4), .rtable td:nth-child(4) { width: 16%; }
+  .rtable th:nth-child(5), .rtable td:nth-child(5) { width: 22%; }
   .rtotal { border: 1px solid #000 !important; padding: 6px !important; font-size: 14px !important; margin-top: 4px !important; }
   .rid { font-size: 20px !important; margin: 4px 0 !important; }
   .sep { border-top: 1px dashed #666 !important; margin: 6px 0 !important; }
@@ -235,22 +193,19 @@ button:active{transform: translateY(0);}
 <!-- Login Screen -->
 <div id="login-screen">
   <div class="login-box">
-    
-    <!-- URL DIRECT LOGO FIX -->
     <div style="text-align:center; margin-bottom:15px;">
       <h1 style="margin:0; color:var(--navy); font-size:28px; font-weight:800; letter-spacing: -1px;">فلامنجو</h1>
       <div style="font-size:12px; color:var(--pink); font-weight:bold; letter-spacing:1px; margin-top:4px;">CLOUD POS</div>
     </div>
-    
     <div id="loginError" class="login-error">الكود أو كلمة المرور غير صحيحة!</div>
     <form onsubmit="event.preventDefault(); attemptLogin();">
         <div class="field">
-        <label>كود المستخدم</label>
-        <input type="text" id="loginCode" placeholder="أدخل الكود الخاص بك" required autocomplete="off">
+          <label>كود المستخدم</label>
+          <input type="text" id="loginCode" placeholder="أدخل الكود الخاص بك" required autocomplete="off">
         </div>
         <div class="field">
-        <label>كلمة المرور</label>
-        <input type="password" id="loginPassword" placeholder="أدخل كلمة المرور" required>
+          <label>كلمة المرور</label>
+          <input type="password" id="loginPassword" placeholder="أدخل كلمة المرور" required>
         </div>
         <button type="submit" class="success" style="font-size: 18px;">تسجيل الدخول</button>
     </form>
@@ -275,13 +230,10 @@ button:active{transform: translateY(0);}
 <!-- Main Application -->
 <div class="app" id="main-app">
   <aside class="side no-print">
-    
-    <!-- SIDEBAR LOGO FIX -->
     <div class="logo">
       <h2 style="margin:0; color:#fff; font-size:24px; font-weight:800;">فلامنجو</h2>
       <div style="font-size:11px; color:var(--pink); font-weight:bold; letter-spacing:1px; margin-top:4px;">CLOUD POS</div>
     </div>
-
     <div class="user-info">
       <div>مرحباً، <b id="displayUserName" style="color: var(--pink);"></b></div>
       <div id="displayUserRole" style="font-size:11px; margin-top: 4px;"></div>
@@ -293,11 +245,7 @@ button:active{transform: translateY(0);}
       <button id="btn-tab-search" onclick="switchTab('tab-search')"><span>⌕ البحث والأرشيف</span></button>
       <button id="btn-tab-cancel" onclick="switchTab('tab-cancel')"><span>❌ إلغاء الأوردرات</span></button>
       <button id="btn-tab-reports" onclick="switchTab('tab-reports')"><span>📊 التقارير والإكسيل</span></button>
-      
-      <!-- Manager Only Tab -->
       <button id="btn-tab-users" class="manager-only" onclick="switchTab('tab-users')"><span>👨‍💼 إدارة الموظفين</span></button>
-      
-      <!-- Settings / Logout -->
       <button style="color:var(--pink)" onclick="document.getElementById('pwdModal').style.display='flex'"><span>🔑 تغيير الباسورد</span></button>
       <button style="color:#e74c3c" onclick="logout()"><span>🚪 تسجيل خروج</span></button>
     </div>
@@ -319,12 +267,11 @@ button:active{transform: translateY(0);}
         <section class="card formcard no-print">
           <h3>بيانات الأوردر والعميل</h3>
           <div class="form">
-            <!-- Hidden Automatic Fields to save space -->
             <input type="hidden" id="orderId">
             <input type="hidden" id="windowNum">
             <input type="hidden" id="orderDate">
             
-            <div class="field"><label>اسم العميل</label><input id="customer" placeholder="اسم العميل (اختياري)" autofocus></div>
+            <div class="field"><label>اسم العميل</label><input id="customer" placeholder="اسم العميل" autofocus></div>
             <div class="field"><label>رقم الموبايل</label><input id="phone" inputmode="tel" placeholder="01X..."></div>
             <div class="field"><label>المنطقة</label><input id="area" placeholder="المنطقة"></div>
             <div class="field full"><label>العنوان بالتفصيل</label><input id="address" placeholder="العنوان ورقم العمارة والشقة"></div>
@@ -333,11 +280,15 @@ button:active{transform: translateY(0);}
 
           <h3 style="margin-top:25px">إضافة صنف للأوردر</h3>
           <div class="addrow">
-            <input id="productName" type="text" placeholder="اسم المنتج">
+            <!-- Smart Auto-complete product input -->
+            <div style="position:relative;">
+              <input id="productName" type="text" list="suggestionsList" placeholder="اسم المنتج (اكتب وهتظهر اقتراحاتك السابقة)">
+              <datalist id="suggestionsList"></datalist>
+            </div>
             <input id="qty" type="number" min="1" value="1" placeholder="الكمية">
             <input id="weight" type="number" min="0" placeholder="الوزن (جرام)">
             <input id="price" type="number" min="0" value="0" placeholder="السعر">
-            <input id="itemNote" type="text" placeholder="ملاحظات الصنف" style="grid-column: span 2">
+            <input id="itemNote" type="text" placeholder="ملاحظات" style="grid-column: span 2">
             <button class="primary" onclick="addItem()">إضافة ＋</button>
           </div>
           
@@ -364,27 +315,21 @@ button:active{transform: translateY(0);}
       </div>
     </div>
 
-    <!-- 2. شاشة أوردرات مؤجلة -->
+    <!-- باقي التبويبات -->
     <div id="tab-suspended" class="tab-content no-print">
-      <div class="top">
-        <h1>الأوردرات المعلقة (المؤجلة)</h1>
-      </div>
+      <div class="top"><h1>الأوردرات المعلقة</h1></div>
       <div class="card">
-        <p style="color:#7f8c8d;margin-top:0;font-size:14px; font-weight: 600;">هذه الأوردرات تم تعليقها ولم تكتمل بعد. يمكنك استكمالها أو حذفها.</p>
         <table class="datatable">
-          <thead><tr><th>تاريخ التعليق</th><th>العميل / الموبايل</th><th>الشباك</th><th>عدد الأصناف</th><th>الإجمالي المبدئي</th><th>إجراء</th></tr></thead>
+          <thead><tr><th>التاريخ</th><th>العميل</th><th>الشباك</th><th>الأصناف</th><th>الإجمالي</th><th>إجراء</th></tr></thead>
           <tbody id="suspendedBody"></tbody>
         </table>
       </div>
     </div>
 
-    <!-- 3. شاشة البحث -->
     <div id="tab-search" class="tab-content no-print">
-      <div class="top">
-        <h1>البحث في الأوردرات السابقة</h1>
-      </div>
+      <div class="top"><h1>البحث والأرشيف</h1></div>
       <div class="card">
-        <input id="historySearch" class="search" placeholder="ابحث برقم الأوردر، الوقت، الشباك، أو اسم العميل..." oninput="renderHistory()">
+        <input id="historySearch" class="search" placeholder="ابحث برقم الأوردر، العميل، الكاشير..." oninput="renderHistory()">
         <table class="datatable">
           <thead><tr><th>رقم الأوردر</th><th>الوقت</th><th>الشباك</th><th>العميل</th><th>الموبايل</th><th>الأصناف</th><th>الإجمالي</th><th>الكاشير</th><th>إجراء</th></tr></thead>
           <tbody id="historyBody"></tbody>
@@ -392,74 +337,46 @@ button:active{transform: translateY(0);}
       </div>
     </div>
 
-    <!-- 4. شاشة إلغاء الأوردرات -->
     <div id="tab-cancel" class="tab-content no-print">
-      <div class="top">
-        <h1>إلغاء الأوردرات من النظام</h1>
-      </div>
+      <div class="top"><h1>إلغاء الأوردرات</h1></div>
       <div class="card">
-        <input id="cancelSearch" class="search" placeholder="ابحث برقم الأوردر، الوقت، الشباك، أو اسم العميل..." oninput="renderCancelList()">
+        <input id="cancelSearch" class="search" placeholder="ابحث للتلغاء..." oninput="renderCancelList()">
         <table class="datatable">
-          <thead><tr><th>رقم الأوردر</th><th>الوقت</th><th>الشباك</th><th>العميل</th><th>الموبايل</th><th>الإجمالي</th><th>إجراء الحذف النهائي</th></tr></thead>
+          <thead><tr><th>رقم الأوردر</th><th>الوقت</th><th>الشباك</th><th>العميل</th><th>الموبايل</th><th>الإجمالي</th><th>حذف</th></tr></thead>
           <tbody id="cancelBody"></tbody>
         </table>
       </div>
     </div>
 
-    <!-- 5. شاشة التقارير -->
     <div id="tab-reports" class="tab-content no-print">
-      <div class="top">
-        <h1>تقارير المبيعات</h1>
-        <button class="export-btn" onclick="exportToExcel()">
-          📥 تصدير التقرير إلى Excel
-        </button>
-      </div>
-      
+      <div class="top"><h1>التقارير والإكسيل</h1><button class="export-btn" onclick="exportToExcel()">📥 تصدير Excel</button></div>
       <div class="card no-print" style="margin-bottom: 20px; display:flex; gap:12px; align-items:center; flex-wrap:wrap; background:#f8f9fa;">
-        <b style="font-size:14px; color:#2c3e50">تحديد الفترة من:</b>
-        <input type="date" id="dateFrom" style="padding:8px 12px; border:2px solid #e0e6ed; border-radius:8px; font-family:inherit; outline:none; font-weight: bold;">
-        <b style="font-size:14px; color:#2c3e50">إلى:</b>
-        <input type="date" id="dateTo" style="padding:8px 12px; border:2px solid #e0e6ed; border-radius:8px; font-family:inherit; outline:none; font-weight: bold;">
-        <button class="primary" style="padding:10px 16px" onclick="filterReports()">تنفيذ 🔍</button>
-        <button class="muted" style="padding:10px 16px" onclick="resetReports()">مبيعات اليوم فقط</button>
+        <b>من:</b> <input type="date" id="dateFrom" style="padding:8px; border:2px solid #e0e6ed; border-radius:8px;">
+        <b>إلى:</b> <input type="date" id="dateTo" style="padding:8px; border:2px solid #e0e6ed; border-radius:8px;">
+        <button class="primary" onclick="filterReports()">تنفيذ</button>
       </div>
-      
       <div class="stats">
-        <div class="stat">
-          <span>إجمالي عدد الأوردرات</span>
-          <b id="sOrders">0</b>
-        </div>
-        <div class="stat">
-          <span>إجمالي الكميات المباعة</span>
-          <b id="sQty">0</b>
-        </div>
-        <div class="stat">
-          <span>إجمالي المبيعات (ج.م)</span>
-          <b id="sValue" style="color:var(--pink)">0</b>
-        </div>
+        <div class="stat"><span>عدد الأوردرات</span><b id="sOrders">0</b></div>
+        <div class="stat"><span>الكميات</span><b id="sQty">0</b></div>
+        <div class="stat"><span>المبيعات</span><b id="sValue" style="color:var(--pink)">0</b></div>
       </div>
     </div>
 
-    <!-- 6. Manager Tab: Users Management -->
     <div id="tab-users" class="tab-content no-print manager-only">
-      <div class="top">
-        <h1>إدارة الموظفين (لوحة المدير)</h1>
-      </div>
-      
+      <div class="top"><h1>إدارة الموظفين</h1></div>
       <div class="card">
-        <h3>إضافة موظف / كاشير جديد</h3>
+        <h3>إضافة كاشير جديد</h3>
         <div class="form">
-          <div class="field"><label>اسم الموظف</label><input id="newUserName" placeholder="مثال: عمر الزناتي"></div>
-          <div class="field"><label>كود الدخول (User ID)</label><input id="newUserCode" placeholder="مثال: 101 أو omar1"></div>
-          <div class="field"><label>كلمة المرور المبدئية</label><input type="password" id="newUserPwd" placeholder="الباسورد"></div>
+          <div class="field"><label>اسم الموظف</label><input id="newUserName"></div>
+          <div class="field"><label>كود الدخول</label><input id="newUserCode"></div>
+          <div class="field"><label>الباسورد</label><input type="password" id="newUserPwd"></div>
         </div>
-        <button class="success" style="margin-top:15px;" onclick="createNewUser()">إنشاء حساب الموظف ➕</button>
+        <button class="success" style="margin-top:15px;" onclick="createNewUser()">إنشاء حساب ➕</button>
       </div>
-
       <div class="card">
-        <h3>قائمة الموظفين المسجلين</h3>
+        <h3>الموظفين المسجلين</h3>
         <table class="datatable">
-          <thead><tr><th>الاسم</th><th>الكود (User ID)</th><th>الدور</th><th>إجراء</th></tr></thead>
+          <thead><tr><th>الاسم</th><th>الكود</th><th>الدور</th><th>إجراء</th></tr></thead>
           <tbody id="usersListBody"></tbody>
         </table>
       </div>
@@ -469,26 +386,41 @@ button:active{transform: translateY(0);}
 </div>
 
 <script>
-// --- Helper Functions ---
 function toEnglishNumbers(str) {
   const arabicNumbers = ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'];
   let res = String(str ?? '');
-  for(let i=0; i<10; i++) {
-    res = res.replace(new RegExp(arabicNumbers[i], 'g'), i);
-  }
+  for(let i=0; i<10; i++) res = res.replace(new RegExp(arabicNumbers[i], 'g'), i);
   return res;
 }
 
-let users = JSON.parse(localStorage.getItem("oms_users_v21")) || [
+let users = JSON.parse(localStorage.getItem("oms_users_v23")) || [
   { code: 'admin', password: 'admin', name: 'مدير النظام (Team Manager)', role: 'manager' },
   { code: '1', password: '123456789', name: 'عمر الزناتي', role: 'cashier' }
 ];
 let currentUser = null;
 
-let orders = JSON.parse(localStorage.getItem("oms_orders_v21") || "[]");
-let suspendedOrders = JSON.parse(localStorage.getItem("oms_suspended_v21") || "[]");
+let orders = JSON.parse(localStorage.getItem("oms_orders_v23") || "[]");
+let suspendedOrders = JSON.parse(localStorage.getItem("oms_suspended_v23") || "[]");
 let currentItems = [];
 let editingSuspendedId = null;
+
+// Dynamic auto-complete product library learned from actual usage
+let productDatabase = JSON.parse(localStorage.getItem("oms_prods_v23") || '["مياه معدنية", "بيبسي لتر", "عيش بلدي", "جبنة رومي", "طماطم", "خيار", "بطاطس"]');
+
+function updateSuggestions() {
+  let list = document.getElementById("suggestionsList");
+  if(list) {
+    list.innerHTML = productDatabase.map(p => `<option value="${p}">`).join("");
+  }
+}
+
+function rememberProduct(name) {
+  if (name && !productDatabase.includes(name)) {
+    productDatabase.push(name);
+    localStorage.setItem("oms_prods_v23", JSON.stringify(productDatabase));
+    updateSuggestions();
+  }
+}
 
 function attemptLogin() {
   let code = toEnglishNumbers(document.getElementById("loginCode").value.trim());
@@ -501,7 +433,6 @@ function attemptLogin() {
     errorMsg.style.display = 'none';
     document.getElementById("login-screen").style.display = 'none';
     document.getElementById("main-app").style.display = 'flex';
-    
     document.getElementById("displayUserName").textContent = user.name;
     document.getElementById("displayUserRole").textContent = user.role === 'manager' ? "(مدير النظام)" : "(كاشير)";
     
@@ -511,7 +442,7 @@ function attemptLogin() {
     document.getElementById("loginCode").value = '';
     document.getElementById("loginPassword").value = '';
     
-    // Initialize order fields specific to this logged in cashier starting strictly from 100
+    updateSuggestions();
     initNewOrderFields();
     switchTab('tab-new');
   } else {
@@ -531,7 +462,7 @@ function saveNewPassword() {
   let uIndex = users.findIndex(u => u.code === currentUser.code);
   if(uIndex > -1) {
     users[uIndex].password = newP;
-    localStorage.setItem("oms_users_v21", JSON.stringify(users));
+    localStorage.setItem("oms_users_v23", JSON.stringify(users));
     alert("تم تغيير كلمة المرور بنجاح!");
     document.getElementById('pwdModal').style.display = 'none';
     document.getElementById("newPwd").value = '';
@@ -544,9 +475,9 @@ function createNewUser() {
   let c = document.getElementById("newUserCode").value.trim();
   let p = document.getElementById("newUserPwd").value.trim();
   if(!n || !c || !p) { alert("أكمل جميع البيانات"); return; }
-  if(users.find(u => u.code === c)) { alert("هذا الكود مستخدم بالفعل! اختر كود آخر."); return; }
+  if(users.find(u => u.code === c)) { alert("هذا الكود مستخدم بالفعل!"); return; }
   users.push({ name: n, code: c, password: p, role: 'cashier' });
-  localStorage.setItem("oms_users_v21", JSON.stringify(users));
+  localStorage.setItem("oms_users_v23", JSON.stringify(users));
   document.getElementById("newUserName").value = "";
   document.getElementById("newUserCode").value = "";
   document.getElementById("newUserPwd").value = "";
@@ -568,27 +499,26 @@ function renderUsersList() {
 
 function deleteUser(index) {
   if (users[index].code === 'admin') return;
-  if(confirm("حذف هذا الموظف؟ لن يتمكن من الدخول مجدداً.")) {
+  if(confirm("حذف هذا الموظف؟")) {
     users.splice(index, 1);
-    localStorage.setItem("oms_users_v21", JSON.stringify(users));
+    localStorage.setItem("oms_users_v23", JSON.stringify(users));
     renderUsersList();
   }
 }
 
 function itemTotal(x) { return (x.weight && x.weight > 0 ? (x.weight / 1000) : 1) * x.price * x.qty; }
 function saveData() {
-  localStorage.setItem("oms_orders_v21", JSON.stringify(orders));
-  localStorage.setItem("oms_suspended_v21", JSON.stringify(suspendedOrders));
+  localStorage.setItem("oms_orders_v23", JSON.stringify(orders));
+  localStorage.setItem("oms_suspended_v23", JSON.stringify(suspendedOrders));
 }
 
 // --- STRICT 100 STARTING SEQUENCE PER CASHIER ---
 function getNextId() {
   if (!currentUser) return 100;
-  let key = "oms_seq_v21_" + currentUser.code;
+  let key = "oms_seq_v23_" + currentUser.code;
   let seq = localStorage.getItem(key);
   if (!seq) {
-    // Explicitly initialize sequence counter so the very first order is 100
-    seq = "99";
+    seq = "99"; // Forces first order strictly to 100
     localStorage.setItem(key, seq);
   }
   return parseInt(seq) + 1;
@@ -596,7 +526,7 @@ function getNextId() {
 
 function incrementId() {
   if (!currentUser) return 100;
-  let key = "oms_seq_v21_" + currentUser.code;
+  let key = "oms_seq_v23_" + currentUser.code;
   let current = getNextId();
   localStorage.setItem(key, current);
   return current;
@@ -604,23 +534,18 @@ function incrementId() {
 
 function now() {
   let d = new Date();
-  let dStr = d.toLocaleDateString("en-GB"); 
-  let tStr = d.toLocaleTimeString("ar-EG", {hour:"2-digit",minute:"2-digit"});
-  return dStr + " - " + tStr;
+  return d.toLocaleDateString("en-GB") + " - " + d.toLocaleTimeString("ar-EG", {hour:"2-digit",minute:"2-digit"});
 }
 
 function esc(s) {
   return String(s ?? "").replace(/[&<>"']/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
 }
 
-// --- TAB SWITCHING (TASKBAR) ---
 function switchTab(tabId) {
   document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
   document.querySelectorAll('.nav button').forEach(el => el.classList.remove('active'));
-  
   let targetTab = document.getElementById(tabId);
   if(targetTab) targetTab.style.display = 'block';
-  
   let activeBtn = document.getElementById('btn-' + tabId);
   if(activeBtn) activeBtn.classList.add('active');
   
@@ -643,7 +568,6 @@ function initNewOrderFields() {
 function clearOrder() {
   editingSuspendedId = null;
   initNewOrderFields();
-  
   ["customer", "phone", "area", "address", "notes", "productName", "weight", "itemNote"].forEach(x => {
       let el = document.getElementById(x);
       if(el) el.value = "";
@@ -664,11 +588,15 @@ function addItem() {
   let p = parseFloat(document.getElementById("price").value) || 0;
   let note = document.getElementById("itemNote").value.trim();
   
-  if(!name) { alert("برجاء كتابة اسم المنتج أولاً."); document.getElementById("productName").focus(); return; }
+  if(!name) { alert("اكتب اسم المنتج!"); document.getElementById("productName").focus(); return; }
+  
+  rememberProduct(name); // Learn the product automatically for future auto-complete
+  
   currentItems.push({ product: name, qty: q, weight: w, price: p, note: note });
   
   document.getElementById("productName").value = "";
   document.getElementById("qty").value = 1;
+  document.getElementById("weight").value = "";
   document.getElementById("price").value = 0;
   document.getElementById("itemNote").value = "";
   document.getElementById("productName").focus();
@@ -775,18 +703,16 @@ function collectData() {
 
 function performSave() {
   if(!document.getElementById("customer").value.trim() && !document.getElementById("phone").value.trim() && currentItems.length === 0) { 
-      alert("برجاء كتابة بيانات العميل أو إضافة أصناف."); 
+      alert("أدخل بيانات العميل أو الأصناف أولاً!"); 
       return false; 
   }
 
   incrementId();
   let o = collectData();
-  
   if(editingSuspendedId) {
     suspendedOrders = suspendedOrders.filter(x => x.id !== editingSuspendedId);
     editingSuspendedId = null;
   }
-  
   orders.unshift(o);
   saveData(); 
   return true;
@@ -794,7 +720,6 @@ function performSave() {
 
 function saveOrderAction() {
   if(performSave()) {
-      alert("تم حفظ الأوردر بنجاح برقم #" + document.getElementById("orderId").value);
       clearOrder(); 
   }
 }
@@ -810,41 +735,37 @@ function saveAndPrintAction() {
 }
 
 function suspendOrder() {
-  if(!document.getElementById("customer").value.trim() && !document.getElementById("phone").value.trim() && currentItems.length === 0) { alert("لا يوجد بيانات لتعليقها!"); return; }
-  
+  if(!document.getElementById("customer").value.trim() && !document.getElementById("phone").value.trim() && currentItems.length === 0) { alert("لا يوجد بيانات!"); return; }
   incrementId();
   let o = collectData();
-  
-  if(editingSuspendedId) { suspendedOrders = suspendedOrders.filter(x => x.id !== editingSuspendedId); }
-  
+  if(editingSuspendedId) suspendedOrders = suspendedOrders.filter(x => x.id !== editingSuspendedId);
   suspendedOrders.unshift(o);
   saveData(); 
-  alert("تم تعليق الأوردر بنجاح!");
+  alert("تم تعليق الأوردر!");
   clearOrder(); 
 }
 
-// --- PERMISSION-BASED LIST FILTERING ---
 function getFilteredList(rawList) {
-  if(currentUser.role === 'manager') return rawList; // Manager sees ALL orders from everyone
-  return rawList.filter(x => x.cashierCode === currentUser.code); // Cashier sees ONLY their own orders
+  if(currentUser.role === 'manager') return rawList;
+  return rawList.filter(x => x.cashierCode === currentUser.code);
 }
 
 function renderSuspended() {
   let list = getFilteredList(suspendedOrders);
   let b = document.getElementById("suspendedBody");
-  if(list.length === 0) { b.innerHTML = `<tr><td colspan="6">لا توجد أوردرات معلقة حالياً.</td></tr>`; return; }
+  if(list.length === 0) { b.innerHTML = `<tr><td colspan="6">لا توجد أوردرات معلقة.</td></tr>`; return; }
   b.innerHTML = list.map((o) => {
     let rawIndex = suspendedOrders.findIndex(x => x.id === o.id && x.cashierCode === o.cashierCode);
     let totalP = o.items.reduce((acc, x) => acc + itemTotal(x), 0);
     return `<tr>
-      <td style="font-size:13px">${esc(o.date || 'بدون تاريخ')}</td>
-      <td style="font-weight:bold">${esc(o.customer || "—")} <br> <span style="font-weight:normal; color:#7f8c8d;">${esc(o.phone || "—")}</span></td>
-      <td><b style="color:var(--navy);font-size:16px">${esc(o.windowNum || "-")}</b></td>
-      <td>${o.items ? o.items.length : 0}</td>
-      <td style="color:var(--pink);font-weight:bold; font-size:15px;">${totalP} ج.م</td>
+      <td>${esc(o.date)}</td>
+      <td><b>${esc(o.customer)}</b></td>
+      <td><b>${esc(o.windowNum)}</b></td>
+      <td>${o.items.length}</td>
+      <td style="color:var(--pink);font-weight:bold">${totalP} ج.م</td>
       <td>
-        <button class="primary" style="padding:6px 12px; margin-bottom:4px;" onclick="resumeSuspended(${rawIndex})">استكمال</button>
-        <button class="danger" style="padding:6px 12px;" onclick="deleteSuspended(${rawIndex})">حذف</button>
+        <button class="primary" onclick="resumeSuspended(${rawIndex})">استكمال</button>
+        <button class="danger" onclick="deleteSuspended(${rawIndex})">حذف</button>
       </td>
     </tr>`;
   }).join("");
@@ -853,10 +774,8 @@ function renderSuspended() {
 function resumeSuspended(index) {
   let list = getFilteredList(suspendedOrders);
   let o = list[index];
-  
   editingSuspendedId = o.id;
   document.getElementById("orderId").value = o.id;
-  document.getElementById("orderDate").value = o.date || now();
   document.getElementById("windowNum").value = o.windowNum || 1;
   ["customer", "phone", "area", "address", "notes"].forEach(k => {
       let el = document.getElementById(k);
@@ -867,40 +786,34 @@ function resumeSuspended(index) {
 }
 
 function deleteSuspended(index) {
-  if(confirm("هل أنت متأكد من حذف هذا الأوردر المعلق؟")) {
+  if(confirm("حذف الأوردر المعلق؟")) {
     let list = getFilteredList(suspendedOrders);
     let o = list[index];
     let realIndex = suspendedOrders.findIndex(x => x.id === o.id && x.cashierCode === o.cashierCode);
-    if(realIndex > -1) {
-      suspendedOrders.splice(realIndex, 1); 
-      saveData(); 
-      renderSuspended();
-    }
+    if(realIndex > -1) { suspendedOrders.splice(realIndex, 1); saveData(); renderSuspended(); }
   }
 }
 
 function renderHistory() {
   let q = (document.getElementById("historySearch").value || "").trim().toLowerCase();
-  
   let list = getFilteredList(orders).filter(o => {
-      let searchableStr = [String(o.id), String(o.windowNum), String(o.date), String(o.customer), String(o.phone), String(o.area), String(o.cashierName)].join(" ").toLowerCase();
-      return !q || searchableStr.includes(q);
+      let str = [String(o.id), String(o.windowNum), String(o.customer), String(o.phone), String(o.cashierName)].join(" ").toLowerCase();
+      return !q || str.includes(q);
   });
-  
   let b = document.getElementById("historyBody");
-  if(list.length === 0) { b.innerHTML = `<tr><td colspan="9">لا يوجد نتائج للبحث.</td></tr>`; return; }
+  if(list.length === 0) { b.innerHTML = `<tr><td colspan="9">لا توجد نتائج.</td></tr>`; return; }
   b.innerHTML = list.slice(0, 50).map(o => {
     let totalP = o.items.reduce((a, x) => a + itemTotal(x), 0);
     return `<tr>
-      <td style="font-size:13px; font-weight:bold; color:var(--navy);">${esc(o.id || 'بدون رقم')}</td>
-      <td style="font-size:12px">${esc(o.date || 'بدون تاريخ')}</td>
-      <td><b style="color:var(--dark-text);">${esc(o.windowNum || "-")}</b></td>
-      <td style="font-weight:bold;">${esc(o.customer)}</td>
+      <td><b>${esc(o.id)}</b></td>
+      <td>${esc(o.date)}</td>
+      <td><b>${esc(o.windowNum)}</b></td>
+      <td><b>${esc(o.customer)}</b></td>
       <td>${esc(o.phone)}</td>
-      <td><span style="background:#e8edf2; padding:2px 8px; border-radius:12px; font-weight:bold;">${o.items.reduce((a, x) => a + x.qty, 0)}</span></td>
+      <td>${o.items.reduce((a, x) => a + x.qty, 0)}</td>
       <td style="color:var(--pink);font-weight:bold">${totalP} ج.م</td>
-      <td style="font-size:12px; font-weight:bold; color:var(--navy);">${esc(o.cashierName || 'Admin')}</td>
-      <td><button class="primary" style="padding:4px 8px" onclick="loadOrderToPrint('${o.id}', '${o.cashierCode}')">طباعة</button></td>
+      <td><b>${esc(o.cashierName)}</b></td>
+      <td><button class="primary" onclick="loadOrderToPrint('${o.id}', '${o.cashierCode}')">طباعة</button></td>
     </tr>`;
   }).join("");
 }
@@ -909,7 +822,6 @@ function loadOrderToPrint(id, cashierCode) {
   let o = orders.find(x => x.id == id && x.cashierCode == cashierCode);
   if(!o) return;
   document.getElementById("orderId").value = o.id;
-  document.getElementById("orderDate").value = o.date || now();
   document.getElementById("windowNum").value = o.windowNum || 1;
   ["customer", "phone", "area", "address", "notes"].forEach(k => {
       let el = document.getElementById(k);
@@ -921,32 +833,29 @@ function loadOrderToPrint(id, cashierCode) {
 
 function renderCancelList() {
   let q = (document.getElementById("cancelSearch").value || "").trim().toLowerCase();
-  
   let list = getFilteredList(orders).filter(o => {
-      let searchableStr = [String(o.id), String(o.windowNum), String(o.date), String(o.customer), String(o.phone), String(o.area), String(o.cashierName)].join(" ").toLowerCase();
-      return !q || searchableStr.includes(q);
+      let str = [String(o.id), String(o.customer), String(o.cashierName)].join(" ").toLowerCase();
+      return !q || str.includes(q);
   });
-  
   let b = document.getElementById("cancelBody");
-  if(list.length === 0) { b.innerHTML = `<tr><td colspan="7">لا توجد أوردرات مطابقة.</td></tr>`; return; }
+  if(list.length === 0) { b.innerHTML = `<tr><td colspan="7">لا توجد أوردرات.</td></tr>`; return; }
   b.innerHTML = list.slice(0, 50).map(o => `
     <tr>
-      <td style="font-size:13px; font-weight:bold; color:var(--navy);">${esc(o.id || 'بدون رقم')}</td>
-      <td style="font-size:12px">${esc(o.date || 'بدون تاريخ')}</td>
-      <td><b style="color:var(--dark-text);">${esc(o.windowNum || "-")}</b></td>
-      <td style="font-weight:bold;">${esc(o.customer)}</td>
+      <td><b>${esc(o.id)}</b></td>
+      <td>${esc(o.date)}</td>
+      <td>${esc(o.windowNum)}</td>
+      <td>${esc(o.customer)}</td>
       <td>${esc(o.phone)}</td>
       <td style="color:var(--pink);font-weight:bold">${o.items.reduce((a, x) => a + itemTotal(x), 0)} ج.م</td>
-      <td><button class="danger" style="padding:4px 8px" onclick="deleteOrderForever('${o.id}', '${o.cashierCode}')">حذف ❌</button></td>
+      <td><button class="danger" onclick="deleteOrderForever('${o.id}', '${o.cashierCode}')">حذف ❌</button></td>
     </tr>
   `).join("");
 }
 
 function deleteOrderForever(id, cashierCode) {
-  if(confirm("⚠️ هل أنت متأكد من حذف هذا الأوردر نهائياً؟ هذا الإجراء لا يمكن التراجع عنه.")) {
+  if(confirm("حذف نهائي؟")) {
     orders = orders.filter(x => !(x.id == id && x.cashierCode == cashierCode)); 
-    saveData(); 
-    renderCancelList();
+    saveData(); renderCancelList();
   }
 }
 
@@ -997,17 +906,12 @@ function updateStats() {
 }
 
 function exportToExcel() {
-  if(filteredOrdersForReport.length === 0) { alert("لا يوجد بيانات لتصديرها في هذه الفترة."); return; }
-  let csvContent = "\uFEFFرقم الأوردر,التاريخ,الشباك,اسم العميل,رقم الموبايل,المنطقة,العنوان,إجمالي الكمية,إجمالي السعر (ج.م),اسم الكاشير,ملاحظات\n";
+  if(filteredOrdersForReport.length === 0) { alert("لا توجد بيانات للتصدير."); return; }
+  let csvContent = "\uFEFFرقم الأوردر,التاريخ,الشباك,العميل,الموبايل,المنطقة,العنوان,الكمية,الإجمالي,الكاشير\n";
   filteredOrdersForReport.forEach(o => {
     let tQ = o.items.reduce((a, x) => a + x.qty, 0);
     let tP = o.items.reduce((a, x) => a + itemTotal(x), 0);
-    let row = [
-      `"${esc(o.id)}"`, `"${esc(o.date)}"`, `"${esc(o.windowNum || "1")}"`, `"${esc(o.customer).replace(/"/g, '""')}"`,
-      `"${esc(o.phone)}"`, `"${esc(o.area).replace(/"/g, '""')}"`, `"${esc(o.address).replace(/"/g, '""')}"`,
-      tQ, tP, `"${esc(o.cashierName || 'Admin')}"`, `"${esc(o.notes).replace(/"/g, '""').replace(/\n/g, ' ')}"`
-    ];
-    csvContent += row.join(",") + "\n";
+    csvContent += `"${o.id}","${o.date}","${o.windowNum}","${o.customer}","${o.phone}","${o.area}","${o.address}",${tQ},${tP},"${o.cashierName}"\n`;
   });
   let link = document.createElement("a");
   link.href = URL.createObjectURL(new Blob([csvContent], { type: 'text/csv;charset=utf-8;' }));
