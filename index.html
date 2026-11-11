@@ -1,953 +1,430 @@
-<!doctype html>
-<html lang="ar" dir="rtl">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>فلامنجو هايبر ماركت - السحابي المستقر</title>
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
-<style>
-:root {
-  --navy: #2B4257;
-  --pink: #F38198;
-  --light-bg: #f4f7f6;
-  --dark-text: #2c3e50;
-  --border: #e0e6ed;
-}
-
-*{box-sizing:border-box}
-body{margin:0;font-family:'Cairo', Tahoma, Arial, sans-serif;background:var(--light-bg);color:var(--dark-text)}
-
-/* --- Login Screen Styles --- */
-#login-screen {
-  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-  background: var(--navy); display: flex; justify-content: center; align-items: center;
-  z-index: 9999; padding: 15px;
-}
-.login-box {
-  background: #fff; padding: 40px 30px; border-radius: 16px; width: 100%; max-width: 400px;
-  box-shadow: 0 15px 35px rgba(0,0,0,0.3); text-align: center;
-}
-.login-box .field { margin-bottom: 15px; text-align: right; }
-.login-box label { font-weight: 600; color: var(--navy); font-size: 14px; margin-bottom: 5px; display: block;}
-.login-box input { width: 100%; padding: 12px; border: 2px solid var(--border); border-radius: 8px; font-size: 15px; font-family: inherit; transition: 0.3s; }
-.login-box input:focus { border-color: var(--pink); outline: none; box-shadow: 0 0 0 3px rgba(243,129,152,0.1); }
-.login-box button { width: 100%; padding: 14px; font-size: 16px; margin-top: 15px; border-radius: 8px; }
-.login-error { color: #e74c3c; font-size: 14px; margin-bottom: 15px; display: none; font-weight: bold; background: #fadbd8; padding: 10px; border-radius: 6px;}
-
-/* --- Main App Layout --- */
-.app{display:none; min-height:100vh}
-.side{width:240px;background:var(--navy);color:#fff;padding:20px 15px;position:fixed;right:0;top:0;bottom:0;z-index:100;overflow-y:auto; box-shadow: -2px 0 10px rgba(0,0,0,0.1);}
-.logo{text-align:center;padding-bottom:15px;border-bottom:1px solid rgba(255,255,255,0.1);margin-bottom:15px;}
-.user-info { text-align: center; font-size: 14px; color: #f8f9fa; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 15px; }
-.nav button{width:100%;border:0;background:transparent;color:#ecf0f1;text-align:right;padding:12px 15px;border-radius:8px;margin:4px 0;font-size:15px;cursor:pointer;transition:0.2s;white-space:nowrap; font-family: inherit; font-weight: 600;}
-.nav button:hover, .nav button.active{background:rgba(255,255,255,0.1);color: var(--pink);}
-.manager-only { display: none; }
-
-.main{margin-right:240px;width:calc(100% - 240px);padding:25px;transition:all 0.3s}
-.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px}
-.top h1{margin:0;font-size:24px; color: var(--navy); font-weight: 700;}
-.actions{display:flex;gap:10px;flex-wrap:wrap}
-
-button{cursor:pointer;border:0;border-radius:8px;padding:10px 16px;font-weight:bold;font-size:14px;transition:0.2s; font-family: inherit;}
-button:hover{opacity:0.9; transform: translateY(-1px);}
-button:active{transform: translateY(0);}
-.primary{background:var(--navy);color:#fff;box-shadow: 0 4px 6px rgba(43,66,87,0.2);}
-.success{background:var(--pink);color:#fff;box-shadow: 0 4px 6px rgba(243,129,152,0.3);}
-.danger{background:#e74c3c;color:#fff;box-shadow: 0 4px 6px rgba(231,76,60,0.2);}
-.warning{background:#f39c12;color:#fff;box-shadow: 0 4px 6px rgba(243,156,18,0.2);}
-.muted{background:#e8edf2;color:var(--dark-text);}
-.export-btn{background:#16a085;color:#fff;font-size:15px;padding:12px 20px;display:inline-flex;align-items:center;gap:8px;}
-
-.grid{display:grid;grid-template-columns:1.5fr 1fr;gap:20px}
-.card{background:#fff;border:none;border-radius:12px;padding:20px;box-shadow:0 4px 15px rgba(0,0,0,0.04);margin-bottom:20px;overflow-x:auto}
-.card h3{margin:0 0 15px;font-size:18px;color:var(--navy);border-bottom:2px solid var(--light-bg);padding-bottom:10px; font-weight: 700;}
-
-.form{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-.field label{display:block;font-size:13px;color:#7f8c8d;margin-bottom:6px;font-weight:600}
-.field input, .field select, .field textarea{width:100%;padding:10px;border:2px solid var(--border);border-radius:8px;font-family:inherit;font-size:14px; transition: 0.3s;}
-.field input:focus, .field textarea:focus{outline:none;border-color:var(--pink); background: #fffafb;}
-.field textarea{min-height:70px;resize:vertical}
-.full{grid-column:1/-1}
-
-.items{width:100%;border-collapse:separate;border-spacing:0;margin-top:15px;}
-.items th, .items td{border-bottom:1px solid var(--border);padding:12px 10px;text-align:center;font-size:14px}
-.items th{background:#f8f9fa;color:var(--navy);font-weight: 700; border-top: 1px solid var(--border); border-bottom: 2px solid var(--border);}
-.items th:first-child{border-top-right-radius: 8px;}
-.items th:last-child{border-top-left-radius: 8px;}
-.qty{font-size:16px;font-weight:bold;color:var(--navy)}
-.price-col{color:var(--pink);font-weight:bold}
-
-.addrow{display:grid;grid-template-columns:1.5fr 70px 80px 80px 1.5fr 85px;gap:8px;margin-top:15px; align-items: end;}
-.addrow input{min-width:0;padding:10px;border:2px solid var(--border);border-radius:8px;font-family:inherit;font-size:14px}
-.addrow button{padding: 10px;}
-
-.search{width:100%;padding:12px;border:2px solid var(--border);border-radius:8px;font-size:15px;margin-bottom:20px; font-family: inherit;}
-.search:focus { outline:none; border-color: var(--pink); }
-
-/* --- 80mm Receipt Strict Styles --- */
-.receipt-container {
-    background: #fdfdfd; display: flex; justify-content: center;
-}
-.receipt{
-  background:#fff;border:1px solid #ccc;padding:10px 5px;width:100%;max-width:302px;
-  font-family:Tahoma,Arial,sans-serif;box-shadow:0 0 10px rgba(0,0,0,0.05);color:#000;
-  margin: 0 auto;
-}
-.rid{text-align:center;font-size:24px;font-weight:bold;margin:6px 0;color:#000}
-.sep{border-top:1px dashed #000;margin:8px 0}
-.rtable{width:100%;border-collapse:collapse;margin:6px 0;table-layout:fixed}
-.rtable th, .rtable td{
-  border:1px solid #333;padding:4px 2px;font-size:12px;text-align:center;word-break:break-word;
-}
-.rtable th{background:#f0f0f0;font-weight:bold; font-size: 11px;}
-.rtable td.col-name{text-align:right;padding-right:4px; font-weight:bold;}
-.rtotal{font-size:16px;font-weight:bold;text-align:center;padding:8px;border:2px solid #000;margin-top:8px;background:#f9f9f9}
-.rmeta{font-size:11px;display:flex;justify-content:space-between;gap:4px;border:1px solid #000;padding:6px;margin-top:8px; font-weight:bold;}
-
-.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:15px;margin-top:15px;margin-bottom:25px}
-.stat{background:#fff;border:none;border-radius:12px;padding:20px;text-align:center;box-shadow:0 4px 15px rgba(0,0,0,0.04); position: relative; overflow: hidden;}
-.stat::after { content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 4px; background: var(--pink); }
-.stat:nth-child(2)::after { background: var(--navy); }
-.stat:nth-child(3)::after { background: #27ae60; }
-.stat span{color:#7f8c8d;font-size:14px;font-weight:600}
-.stat b{display:block;font-size:30px;margin-top:10px;color:var(--dark-text)}
-
-.datatable{width:100%;border-collapse:collapse;background:#fff;border-radius:8px;overflow:hidden}
-.datatable th, .datatable td{border-bottom:1px solid var(--border);padding:12px;text-align:center;font-size:14px}
-.datatable th{background:#f8f9fa;color:var(--navy);font-weight:bold}
-.datatable tr:hover{background:#fafdff}
-
-.tab-content{display:none;animation:fadeIn 0.3s}
-@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
-
-.modal-overlay {
-    display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(43,66,87,0.8); z-index: 1000; justify-content: center; align-items: center; padding:15px; backdrop-filter: blur(3px);
-}
-.modal-content { background: #fff; padding: 25px; border-radius: 12px; width: 100%; max-width: 350px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
-
-/* --- Mobile Responsiveness --- */
-@media(max-width: 850px){
-  .app { flex-direction: column; }
-  .side {
-    position: sticky; top: 0; right: 0; left: 0; width: 100%; height: auto;
-    padding: 10px 15px; display: flex; flex-direction: column; gap: 5px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-  }
-  .logo { display: none; }
-  .user-info { display: flex; justify-content: space-between; align-items: center; padding-bottom: 8px; margin-bottom: 8px; font-size: 13px; border-color: rgba(255,255,255,0.15); }
-  .nav {
-    display: flex; overflow-x: auto; gap: 8px; padding-bottom: 5px; scrollbar-width: none;
-  }
-  .nav::-webkit-scrollbar { display: none; }
-  .nav button {
-    width: auto; padding: 8px 14px; margin: 0; font-size: 13px; background: rgba(255,255,255,0.08); border-radius: 8px; flex-shrink: 0; border: 1px solid rgba(255,255,255,0.05);
-  }
-  .nav button.active { background: var(--pink); color: #fff; border-color: var(--pink); }
-  .manager-only, #btn-tab-users { margin-top: 0 !important; border-top: 0 !important; }
-  
-  .main { margin-right: 0; width: 100%; padding: 15px; }
-  .top h1 { font-size: 20px; }
-  .grid { grid-template-columns: 1fr; gap: 15px; }
-  .form { grid-template-columns: 1fr 1fr; }
-  .addrow { grid-template-columns: 1fr 1fr; gap: 8px; }
-  .addrow button { grid-column: 1 / -1; margin-top: 5px; }
-  .stats { grid-template-columns: 1fr; gap: 10px; }
-}
-
-/* --- PRINT MEDIA QUERIES --- */
-@page { margin: 0; }
-@media print{
-  html, body {
-    width: 100% !important; max-width: 100% !important; margin: 0 !important; padding: 0 !important;
-    background: #fff !important; font-family: Tahoma, Arial, sans-serif !important; direction: rtl !important; display: block !important;
-  }
-  body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  #login-screen, .modal-overlay, .side, .top, .no-print, .nav, .actions, .card.formcard { display: none !important; }
-  .app { display: block; min-height: 0; width: 100% !important;}
-  .main { margin: 0 !important; padding: 0 !important; width: 100% !important; display: block !important;}
-  .grid { display: block; gap: 0; width: 100% !important;}
-  #tab-new { display: block !important; width: 100% !important;}
-  .card:not(.formcard) { border: none !important; box-shadow: none !important; padding: 0 !important; margin-bottom: 0 !important; width: 100% !important;}
-  .receipt-container { display: block !important; width: 100% !important; background: #fff !important; padding: 0 !important; margin: 0 !important; }
-  .receipt {
-    display: block !important; border: none !important; box-shadow: none !important; width: 100% !important; max-width: 100% !important;
-    box-sizing: border-box !important; margin: 0 !important; padding: 0 4mm !important; min-height: 0 !important; font-size: 12px !important; line-height: 1.3 !important; overflow: hidden !important; page-break-after: auto;
-  }
-  .receipt div, .receipt table, .receipt tr { page-break-inside: avoid !important; }
-  .rtable { width: 100% !important; table-layout: fixed !important; }
-  .rtable th, .rtable td { border: 1px solid #444 !important; padding: 3px 1px !important; font-size: 11px !important; word-wrap: break-word !important; }
-  .rtable th:nth-child(1), .rtable td:nth-child(1) { width: 34%; }
-  .rtable th:nth-child(2), .rtable td:nth-child(2) { width: 13%; }
-  .rtable th:nth-child(3), .rtable td:nth-child(3) { width: 15%; }
-  .rtable th:nth-child(4), .rtable td:nth-child(4) { width: 16%; }
-  .rtable th:nth-child(5), .rtable td:nth-child(5) { width: 22%; }
-  .rtotal { border: 1px solid #000 !important; padding: 6px !important; font-size: 14px !important; margin-top: 4px !important; }
-  .rid { font-size: 20px !important; margin: 4px 0 !important; }
-  .sep { border-top: 1px dashed #666 !important; margin: 6px 0 !important; }
-  .rmeta { border: 1px dashed #666 !important; padding: 4px !important; margin-top: 6px !important; font-size: 11px !important;}
-}
-</style>
-</head>
-<body>
-
-<!-- Login Screen -->
-<div id="login-screen">
-  <div class="login-box">
-    <div style="text-align:center; margin-bottom:15px;">
-      <h1 style="margin:0; color:var(--navy); font-size:28px; font-weight:800; letter-spacing: -1px;">فلامنجو</h1>
-      <div style="font-size:12px; color:var(--pink); font-weight:bold; letter-spacing:1px; margin-top:4px;">CLOUD POS</div>
-    </div>
-    <div id="loginError" class="login-error">الكود أو كلمة المرور غير صحيحة!</div>
-    <form onsubmit="event.preventDefault(); attemptLogin();">
-        <div class="field">
-          <label>كود المستخدم</label>
-          <input type="text" id="loginCode" placeholder="أدخل الكود الخاص بك" required autocomplete="off">
-        </div>
-        <div class="field">
-          <label>كلمة المرور</label>
-          <input type="password" id="loginPassword" placeholder="أدخل كلمة المرور" required>
-        </div>
-        <button type="submit" class="success" style="font-size: 18px;">تسجيل الدخول</button>
-    </form>
-  </div>
-</div>
-<div style="font-size:11px; color:#a0aec0; margin-top:15px; font-weight:bold;">تم التطوير بواسطة: OE Vision</div>
-<!-- Change Password Modal -->
-<div id="pwdModal" class="modal-overlay">
-  <div class="modal-content">
-    <h3 style="margin-top:0; color:var(--navy); font-weight: 700;">تغيير كلمة المرور</h3>
-    <div class="field" style="text-align:right">
-      <label>كلمة المرور الجديدة</label>
-      <input type="password" id="newPwd" placeholder="اكتب الباسورد الجديد">
-    </div>
-    <div style="display:flex; gap:10px; margin-top:20px">
-      <button class="success" style="flex:1" onclick="saveNewPassword()">حفظ التغيير</button>
-      <button class="danger" style="flex:1" onclick="document.getElementById('pwdModal').style.display='none'">إلغاء</button>
-    </div>
-  </div>
-</div>
-
-<!-- Main Application -->
-<div class="app" id="main-app">
-  <aside class="side no-print">
-    <div class="logo">
-      <h2 style="margin:0; color:#fff; font-size:24px; font-weight:800;">فلامنجو</h2>
-      <div style="font-size:11px; color:var(--pink); font-weight:bold; letter-spacing:1px; margin-top:4px;">CLOUD POS</div>
-    </div>
-    <div class="user-info">
-      <div>مرحباً، <b id="displayUserName" style="color: var(--pink);"></b></div>
-      <div id="displayUserRole" style="font-size:11px; margin-top: 4px;"></div>
-    </div>
-    
-    <div class="nav">
-      <button id="btn-tab-new" class="active" onclick="switchTab('tab-new')"><span>＋ أوردر جديد</span></button>
-      <button id="btn-tab-suspended" onclick="switchTab('tab-suspended')"><span>⏳ أوردرات مؤجلة</span></button>
-      <button id="btn-tab-search" onclick="switchTab('tab-search')"><span>⌕ البحث والأرشيف</span></button>
-      <button id="btn-tab-cancel" onclick="switchTab('tab-cancel')"><span>❌ إلغاء الأوردرات</span></button>
-      <button id="btn-tab-reports" onclick="switchTab('tab-reports')"><span>📊 التقارير والإكسيل</span></button>
-      <button id="btn-tab-users" class="manager-only" onclick="switchTab('tab-users')"><span>👨‍💼 إدارة الموظفين</span></button>
-      <button style="color:var(--pink)" onclick="document.getElementById('pwdModal').style.display='flex'"><span>🔑 تغيير الباسورد</span></button>
-      <button style="color:#e74c3c" onclick="logout()"><span>🚪 تسجيل خروج</span></button>
-   <div style="font-size:11px; color:#cbd5e0; text-align:center; padding-top:10px; border-top:1px solid rgba(255,255,255,0.1); font-weight:bold;">تم التطوير بواسطة: OE Vision</div>
-    </div>
-  </aside>
-
-  <main class="main">
-    <!-- 1. شاشة أوردر جديد -->
-    <div id="tab-new" class="tab-content" style="display:block">
-      <div class="top no-print">
-        <h1>إنشاء أوردر جديد</h1>
-        <div class="actions">
-          <button class="warning" onclick="suspendOrder()">⏳ تعليق</button>
-          <button class="primary" onclick="saveOrderAction()">💾 حفظ فقط</button>
-          <button class="success" onclick="saveAndPrintAction()">🖨️ حفظ وطباعة</button>
-        </div>
-      </div>
-
-      <div class="grid">
-        <section class="card formcard no-print">
-          <h3>بيانات الأوردر والعميل</h3>
-          <div class="form">
-            <input type="hidden" id="orderId">
-            <input type="hidden" id="windowNum">
-            <input type="hidden" id="orderDate">
-            
-            <div class="field"><label>اسم العميل</label><input id="customer" placeholder="اسم العميل" autofocus></div>
-            <div class="field"><label>رقم الموبايل</label><input id="phone" inputmode="tel" placeholder="01X..."></div>
-            <div class="field"><label>المنطقة</label><input id="area" placeholder="المنطقة"></div>
-            <div class="field full"><label>العنوان بالتفصيل</label><input id="address" placeholder="العنوان ورقم العمارة والشقة"></div>
-            <div class="field full"><label>ملاحظات الأوردر</label><textarea id="notes" placeholder="أي ملاحظات عامة للطيار أو التجهيز..."></textarea></div>
-          </div>
-
-          <h3 style="margin-top:25px">إضافة صنف للأوردر</h3>
-          <div class="addrow">
-            <div style="position:relative;">
-              <input id="productName" type="text" list="suggestionsList" placeholder="اسم المنتج (اكتب للاقتراح)">
-              <datalist id="suggestionsList"></datalist>
-            </div>
-            <input id="qty" type="number" min="1" value="1" placeholder="الكمية">
-            <input id="weight" type="number" min="0" placeholder="الوزن (جرام)">
-            <input id="price" type="number" min="0" value="0" placeholder="السعر">
-            <input id="itemNote" type="text" placeholder="ملاحظات" style="grid-column: span 2">
-            <button class="primary" onclick="addItem()">إضافة ＋</button>
-          </div>
-          
-          <table class="items">
-            <thead><tr><th>#</th><th>الصنف</th><th>الكمية</th><th>الوزن</th><th>السعر</th><th>الإجمالي</th><th>ملاحظات</th><th>إجراء</th></tr></thead>
-            <tbody id="itemsBody"></tbody>
-          </table>
-          <div style="display:flex;justify-content:space-between;margin-top:20px;font-size:15px;background:#f8f9fa;padding:15px;border-radius:8px;font-weight:bold;flex-wrap:wrap;gap:10px; border: 1px solid var(--border);">
-            <span>الأصناف: <span id="itemCount" style="color:var(--navy); font-size:18px;">0</span></span>
-            <span>الكمية: <span id="totalQty" style="color:var(--navy); font-size:18px;">0</span></span>
-            <span>الإجمالي الكلي: <span id="totalPrice" style="color:var(--pink); font-size:20px;">0</span> ج.م</span>
-          </div>
-        </section>
-
-        <section class="card receipt-container">
-          <div style="width:100%;">
-              <h3 class="no-print" style="text-align:center;">معاينة الفاتورة (80mm)</h3>
-              <div class="receipt" id="receipt"></div>
-              <div class="no-print" style="display:flex;gap:8px;margin-top:15px; max-width:302px; margin-left:auto; margin-right:auto;">
-                 <button class="success" style="flex:1; padding: 12px; font-size: 16px;" onclick="saveAndPrintAction()">طباعة الفاتورة 🖨️</button>
-              </div>
-          </div>
-        </section>
-      </div>
-    </div>
-
-    <!-- باقي التبويبات -->
-    <div id="tab-suspended" class="tab-content no-print">
-      <div class="top"><h1>الأوردرات المعلقة</h1></div>
-      <div class="card">
-        <table class="datatable">
-          <thead><tr><th>التاريخ</th><th>العميل</th><th>الشباك</th><th>الأصناف</th><th>الإجمالي</th><th>إجراء</th></tr></thead>
-          <tbody id="suspendedBody"></tbody>
-        </table>
-      </div>
-    </div>
-
-    <div id="tab-search" class="tab-content no-print">
-      <div class="top"><h1>البحث والأرشيف</h1></div>
-      <div class="card">
-        <input id="historySearch" class="search" placeholder="ابحث برقم الأوردر، العميل، الكاشير..." oninput="renderHistory()">
-        <table class="datatable">
-          <thead><tr><th>رقم الأوردر</th><th>الوقت</th><th>الشباك</th><th>العميل</th><th>الموبايل</th><th>الأصناف</th><th>الإجمالي</th><th>الكاشير</th><th>إجراء</th></tr></thead>
-          <tbody id="historyBody"></tbody>
-        </table>
-      </div>
-    </div>
-
-    <div id="tab-cancel" class="tab-content no-print">
-      <div class="top"><h1>إلغاء الأوردرات</h1></div>
-      <div class="card">
-        <input id="cancelSearch" class="search" placeholder="ابحث للتلغاء..." oninput="renderCancelList()">
-        <table class="datatable">
-          <thead><tr><th>رقم الأوردر</th><th>الوقت</th><th>الشباك</th><th>العميل</th><th>الموبايل</th><th>الإجمالي</th><th>حذف</th></tr></thead>
-          <tbody id="cancelBody"></tbody>
-        </table>
-      </div>
-    </div>
-
-    <div id="tab-reports" class="tab-content no-print">
-      <div class="top"><h1>التقارير والإكسيل</h1><button class="export-btn" onclick="exportToExcel()">📥 تصدير Excel</button></div>
-      <div class="card no-print" style="margin-bottom: 20px; display:flex; gap:12px; align-items:center; flex-wrap:wrap; background:#f8f9fa;">
-        <b>من:</b> <input type="date" id="dateFrom" style="padding:8px; border:2px solid #e0e6ed; border-radius:8px;">
-        <b>إلى:</b> <input type="date" id="dateTo" style="padding:8px; border:2px solid #e0e6ed; border-radius:8px;">
-        <button class="primary" onclick="filterReports()">تنفيذ</button>
-      </div>
-      <div class="stats">
-        <div class="stat"><span>عدد الأوردرات</span><b id="sOrders">0</b></div>
-        <div class="stat"><span>الكميات</span><b id="sQty">0</b></div>
-        <div class="stat"><span>المبيعات</span><b id="sValue" style="color:var(--pink)">0</b></div>
-      </div>
-    </div>
-
-    <div id="tab-users" class="tab-content no-print manager-only">
-      <div class="top"><h1>إدارة الموظفين</h1></div>
-      <div class="card">
-        <h3>إضافة كاشير جديد</h3>
-        <div class="form">
-          <div class="field"><label>اسم الموظف</label><input id="newUserName"></div>
-          <div class="field"><label>كود الدخول</label><input id="newUserCode"></div>
-          <div class="field"><label>الباسورد</label><input type="password" id="newUserPwd"></div>
-        </div>
-        <button class="success" style="margin-top:15px;" onclick="createNewUser()">إنشاء حساب ➕</button>
-      </div>
-      <div class="card">
-        <h3>الموظفين المسجلين</h3>
-        <table class="datatable">
-          <thead><tr><th>الاسم</th><th>الكود</th><th>الدور</th><th>إجراء</th></tr></thead>
-          <tbody id="usersListBody"></tbody>
-        </table>
-      </div>
-    </div>
-
-  </main>
-</div>
-
-<script>
-function toEnglishNumbers(str) {
-  const arabicNumbers = ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'];
-  let res = String(str ?? '');
-  for(let i=0; i<10; i++) res = res.replace(new RegExp(arabicNumbers[i], 'g'), i);
-  return res;
-}
-
-let users = JSON.parse(localStorage.getItem("oms_users_v24")) || [
-  { code: 'admin', password: 'admin', name: 'مدير النظام (Team Manager)', role: 'manager' },
-  { code: '1', password: '123456789', name: 'عمر الزناتي', role: 'cashier' }
-];
-let currentUser = null;
-
-let orders = JSON.parse(localStorage.getItem("oms_orders_v24") || "[]");
-let suspendedOrders = JSON.parse(localStorage.getItem("oms_suspended_v24") || "[]");
-let currentItems = [];
-let editingSuspendedId = null;
-
-let productDatabase = JSON.parse(localStorage.getItem("oms_prods_v24") || '["مياه معدنية", "بيبسي لتر", "عيش بلدي", "جبنة رومي", "طماطم", "خيار", "بطاطس"]');
-
-function updateSuggestions() {
-  let list = document.getElementById("suggestionsList");
-  if(list) {
-    list.innerHTML = productDatabase.map(p => `<option value="${p}">`).join("");
-  }
-}
-
-function rememberProduct(name) {
-  if (name && !productDatabase.includes(name)) {
-    productDatabase.push(name);
-    localStorage.setItem("oms_prods_v24", JSON.stringify(productDatabase));
-    updateSuggestions();
-  }
-}
-
-// --- SESSION PERSISTENCE FIX (STAYS ON REFRESH) ---
-window.addEventListener('DOMContentLoaded', () => {
-    let savedUserJson = sessionStorage.getItem("oms_current_user_v24");
-    if (savedUserJson) {
-        currentUser = JSON.parse(savedUserJson);
-        document.getElementById("login-screen").style.display = 'none';
-        document.getElementById("main-app").style.display = 'flex';
-        document.getElementById("displayUserName").textContent = currentUser.name;
-        document.getElementById("displayUserRole").textContent = currentUser.role === 'manager' ? "(مدير النظام)" : "(كاشير)";
-        
-        let managerElements = document.querySelectorAll(".manager-only");
-        managerElements.forEach(el => el.style.display = (currentUser.role === 'manager') ? 'block' : 'none');
-        
-        updateSuggestions();
-        initNewOrderFields();
-        switchTab('tab-new');
-    }
-});
-
-function attemptLogin() {
-  let code = toEnglishNumbers(document.getElementById("loginCode").value.trim());
-  let pwd = toEnglishNumbers(document.getElementById("loginPassword").value.trim());
-  let errorMsg = document.getElementById("loginError");
-  
-  let user = users.find(u => u.code === code && u.password === pwd);
-  if(user) {
-    currentUser = user;
-    sessionStorage.setItem("oms_current_user_v24", JSON.stringify(user)); // Save session
-    
-    errorMsg.style.display = 'none';
-    document.getElementById("login-screen").style.display = 'none';
-    document.getElementById("main-app").style.display = 'flex';
-    document.getElementById("displayUserName").textContent = user.name;
-    document.getElementById("displayUserRole").textContent = user.role === 'manager' ? "(مدير النظام)" : "(كاشير)";
-    
-    let managerElements = document.querySelectorAll(".manager-only");
-    managerElements.forEach(el => el.style.display = (user.role === 'manager') ? 'block' : 'none');
-    
-    document.getElementById("loginCode").value = '';
-    document.getElementById("loginPassword").value = '';
-    
-    updateSuggestions();
-    initNewOrderFields();
-    switchTab('tab-new');
-  } else {
-    errorMsg.style.display = 'block';
-  }
-}
-
-function logout() {
-  currentUser = null;
-  sessionStorage.removeItem("oms_current_user_v24");
-  document.getElementById("main-app").style.display = 'none';
-  document.getElementById("login-screen").style.display = 'flex';
-}
-
-function saveNewPassword() {
-  let newP = document.getElementById("newPwd").value.trim();
-  if(!newP) { alert("برجاء كتابة باسورد جديد"); return; }
-  let uIndex = users.findIndex(u => u.code === currentUser.code);
-  if(uIndex > -1) {
-    users[uIndex].password = newP;
-    localStorage.setItem("oms_users_v24", JSON.stringify(users));
-    alert("تم تغيير كلمة المرور بنجاح!");
-    document.getElementById('pwdModal').style.display = 'none';
-    document.getElementById("newPwd").value = '';
-  }
-}
-
-function createNewUser() {
-  if (currentUser.role !== 'manager') return;
-  let n = document.getElementById("newUserName").value.trim();
-  let c = document.getElementById("newUserCode").value.trim();
-  let p = document.getElementById("newUserPwd").value.trim();
-  if(!n || !c || !p) { alert("أكمل جميع البيانات"); return; }
-  if(users.find(u => u.code === c)) { alert("هذا الكود مستخدم بالفعل!"); return; }
-  users.push({ name: n, code: c, password: p, role: 'cashier' });
-  localStorage.setItem("oms_users_v24", JSON.stringify(users));
-  document.getElementById("newUserName").value = "";
-  document.getElementById("newUserCode").value = "";
-  document.getElementById("newUserPwd").value = "";
-  alert("تم إضافة الموظف بنجاح!");
-  renderUsersList();
-}
-
-function renderUsersList() {
-  let b = document.getElementById("usersListBody");
-  b.innerHTML = users.map((u, i) => `
-    <tr>
-      <td>${esc(u.name)}</td>
-      <td><b>${esc(u.code)}</b></td>
-      <td>${u.role === 'manager' ? '<span style="color:var(--pink); font-weight:bold;">مدير</span>' : 'كاشير'}</td>
-      <td>${u.code !== 'admin' ? `<button class="danger" style="padding:6px 12px" onclick="deleteUser(${i})">حذف</button>` : '-'}</td>
-    </tr>
-  `).join("");
-}
-
-function deleteUser(index) {
-  if (users[index].code === 'admin') return;
-  if(confirm("حذف هذا الموظف؟")) {
-    users.splice(index, 1);
-    localStorage.setItem("oms_users_v24", JSON.stringify(users));
-    renderUsersList();
-  }
-}
-
-function itemTotal(x) { return (x.weight && x.weight > 0 ? (x.weight / 1000) : 1) * x.price * x.qty; }
-function saveData() {
-  localStorage.setItem("oms_orders_v24", JSON.stringify(orders));
-  localStorage.setItem("oms_suspended_v24", JSON.stringify(suspendedOrders));
-}
-
-// --- STRICT 100 STARTING SEQUENCE PER CASHIER ---
-function getNextId() {
-  if (!currentUser) return 100;
-  let key = "oms_seq_v24_" + currentUser.code;
-  let seq = localStorage.getItem(key);
-  if (!seq) {
-    seq = "99"; // Forces first order strictly to 100
-    localStorage.setItem(key, seq);
-  }
-  return parseInt(seq) + 1;
-}
-
-function incrementId() {
-  if (!currentUser) return 100;
-  let key = "oms_seq_v24_" + currentUser.code;
-  let current = getNextId();
-  localStorage.setItem(key, current);
-  return current;
-}
-
-function now() {
-  let d = new Date();
-  return d.toLocaleDateString("en-GB") + " - " + d.toLocaleTimeString("ar-EG", {hour:"2-digit",minute:"2-digit"});
-}
-
-function esc(s) {
-  return String(s ?? "").replace(/[&<>"']/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
-}
-
-function switchTab(tabId) {
-  document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
-  document.querySelectorAll('.nav button').forEach(el => el.classList.remove('active'));
-  let targetTab = document.getElementById(tabId);
-  if(targetTab) targetTab.style.display = 'block';
-  let activeBtn = document.getElementById('btn-' + tabId);
-  if(activeBtn) activeBtn.classList.add('active');
-  
-  if(tabId === 'tab-suspended') renderSuspended();
-  if(tabId === 'tab-search') renderHistory();
-  if(tabId === 'tab-cancel') renderCancelList();
-  if(tabId === 'tab-reports') updateStats();
-  if(tabId === 'tab-users') renderUsersList();
-}
-
-function initNewOrderFields() {
-    let nextNum = getNextId();
-    document.getElementById("orderId").value = nextNum;
-    let windowCalc = ((nextNum - 100) % 10) + 1; 
-    document.getElementById("windowNum").value = windowCalc;
-    document.getElementById("orderDate").value = now();
-    renderReceipt();
-}
-
-function clearOrder() {
-  editingSuspendedId = null;
-  initNewOrderFields();
-  ["customer", "phone", "area", "address", "notes", "productName", "weight", "itemNote"].forEach(x => {
-      let el = document.getElementById(x);
-      if(el) el.value = "";
-  });
-  document.getElementById("qty").value = 1;
-  document.getElementById("price").value = 0;
-  currentItems = [];
-  renderItems();
-  renderReceipt();
-  let cust = document.getElementById("customer");
-  if(cust) cust.focus();
-}
-
-function addItem() {
-  let name = document.getElementById("productName").value.trim();
-  let q = Math.max(1, parseInt(document.getElementById("qty").value) || 1);
-  let w = parseFloat(document.getElementById("weight").value) || 0;
-  let p = parseFloat(document.getElementById("price").value) || 0;
-  let note = document.getElementById("itemNote").value.trim();
-  
-  if(!name) { alert("اكتب اسم المنتج!"); document.getElementById("productName").focus(); return; }
-  
-  rememberProduct(name);
-  
-  currentItems.push({ product: name, qty: q, weight: w, price: p, note: note });
-  
-  document.getElementById("productName").value = "";
-  document.getElementById("qty").value = 1;
-  document.getElementById("weight").value = "";
-  document.getElementById("price").value = 0;
-  document.getElementById("itemNote").value = "";
-  document.getElementById("productName").focus();
-  renderItems(); renderReceipt();
-}
-
-function removeItem(i) { currentItems.splice(i, 1); renderItems(); renderReceipt(); }
-
-function renderItems() {
-  let b = document.getElementById("itemsBody");
-  b.innerHTML = currentItems.map((x, i) => `
-    <tr>
-      <td>${i + 1}</td>
-      <td style="font-weight:700; color:var(--navy);">${esc(x.product)}</td>
-      <td class="qty">${x.qty}</td>
-      <td style="color:#7f8c8d">${x.weight ? x.weight + 'g' : '-'}</td>
-      <td class="price-col">${x.price}</td>
-      <td style="font-weight:bold; color:var(--navy);">${itemTotal(x)}</td>
-      <td style="font-size:12px; color:#7f8c8d;">${esc(x.note || "-")}</td>
-      <td><button class="danger" style="padding:6px 10px; font-size:12px;" onclick="removeItem(${i})">حذف</button></td>
-    </tr>
-  `).join("");
-  
-  document.getElementById("itemCount").textContent = currentItems.length;
-  document.getElementById("totalQty").textContent = currentItems.reduce((a, x) => a + x.qty, 0);
-  document.getElementById("totalPrice").textContent = currentItems.reduce((a, x) => a + itemTotal(x), 0);
-}
-
-function renderReceipt() {
-  let id = document.getElementById("orderId").value || getNextId();
-  let wNum = document.getElementById("windowNum").value || 1;
-  let customer = document.getElementById("customer").value || "—";
-  let phone = document.getElementById("phone").value || "—";
-  let area = document.getElementById("area").value || "—";
-  let address = document.getElementById("address").value || "";
-  let notes = document.getElementById("notes").value || "";
-  let dt = document.getElementById("orderDate").value || now();
-  let totalVal = currentItems.reduce((a, x) => a + itemTotal(x), 0);
-  
-  let rows = currentItems.map((x) => `
-    <tr>
-      <td class="col-name"><b>${esc(x.product)}</b>${x.note ? `<div style="font-size:9px;color:#333">${esc(x.note)}</div>` : ""}</td>
-      <td>${x.qty}</td>
-      <td>${x.weight ? x.weight + 'g' : '-'}</td>
-      <td>${x.price}</td>
-      <td><b>${itemTotal(x)}</b></td>
-    </tr>
-  `).join("");
-
-  document.getElementById("receipt").innerHTML = `
-    <div style="text-align:center; margin-bottom:12px;">
-      <h2 style="margin:0; font-size:28px; font-weight:900; color:#000; letter-spacing:-1px;">فلامنجو</h2>
-      <div style="font-size:11px; font-weight:bold; letter-spacing:1px; color:#333; border-top:1px solid #000; display:inline-block; padding-top:4px; margin-top:2px;">CLOUD POS</div>
-    </div>
-    
-    <div class="rid">شباك #${esc(wNum)}</div>
-    <div style="text-align:center;font-size:14px;margin-bottom:3px;font-weight:bold;">أوردر رقم: #${esc(id)}</div>
-    <div style="text-align:center;font-size:12px;margin-bottom:6px; font-weight: bold;">التاريخ: ${esc(dt)}</div>
-    <div class="sep"></div>
-    <div style="border:1px solid #000;padding:6px;line-height:1.6;font-size:13px; font-weight:bold;">
-      الاسم: ${esc(customer)}<br>
-      الموبايل: ${esc(phone)}<br>
-      المنطقة: ${esc(area)}
-      ${address ? `<br>العنوان: ${esc(address)}` : ""}
-    </div>
-    <div class="sep"></div>
-    <table class="rtable">
-      <thead>
-        <tr>
-          <th style="width:34%">الصنف</th>
-          <th style="width:13%">كمية</th>
-          <th style="width:15%">وزن</th>
-          <th style="width:16%">سعر</th>
-          <th style="width:22%">إجمالي</th>
-        </tr>
-      </thead>
-      <tbody>${rows || '<tr><td colspan="5" style="text-align:center">لم تتم إضافة أصناف</td></tr>'}</tbody>
-    </table>
-    <div class="rtotal">الإجمالي: ${totalVal} ج.م</div>
-    ${notes ? `<div style="margin-top:8px;border:1px dashed #000;padding:6px;font-size:12px;"><b>ملاحظات:</b> ${esc(notes)}</div>` : ''}
-    <div class="rmeta">
-      <span>الكاشير: ${esc(currentUser ? currentUser.name : 'Admin')}</span>
-      <span>الوقت: ${esc(new Date().toLocaleTimeString("ar-EG",{hour:"2-digit",minute:"2-digit"}))}</span>
-    </div>
-  `;
-}
-
-function collectData() {
-  return {
-    id: document.getElementById("orderId").value,
-    windowNum: document.getElementById("windowNum").value,
-    customer: document.getElementById("customer").value.trim(),
-    phone: document.getElementById("phone").value.trim(),
-    area: document.getElementById("area").value.trim(),
-    address: document.getElementById("address").value.trim(),
-    notes: document.getElementById("notes").value.trim(),
-    date: document.getElementById("orderDate").value,
-    isoDate: new Date().toISOString(),
-    items: JSON.parse(JSON.stringify(currentItems)),
-    cashierCode: currentUser.code,
-    cashierName: currentUser.name
-  };
-}
-
-function performSave() {
-  if(!document.getElementById("customer").value.trim() && !document.getElementById("phone").value.trim() && currentItems.length === 0) { 
-      alert("أدخل بيانات العميل أو الأصناف أولاً!"); 
-      return false; 
-  }
-
-  incrementId();
-  let o = collectData();
-  if(editingSuspendedId) {
-    suspendedOrders = suspendedOrders.filter(x => x.id !== editingSuspendedId);
-    editingSuspendedId = null;
-  }
-  orders.unshift(o);
-  saveData(); 
-  return true;
-}
-
-function saveOrderAction() {
-  if(performSave()) {
-      clearOrder(); 
-  }
-}
-
-function saveAndPrintAction() {
-  if(performSave()) {
-      renderReceipt();
-      setTimeout(() => {
-          window.print();
-          clearOrder(); 
-      }, 300);
-  }
-}
-
-function suspendOrder() {
-  if(!document.getElementById("customer").value.trim() && !document.getElementById("phone").value.trim() && currentItems.length === 0) { alert("لا يوجد بيانات!"); return; }
-  incrementId();
-  let o = collectData();
-  if(editingSuspendedId) suspendedOrders = suspendedOrders.filter(x => x.id !== editingSuspendedId);
-  suspendedOrders.unshift(o);
-  saveData(); 
-  alert("تم تعليق الأوردر!");
-  clearOrder(); 
-}
-
-function getFilteredList(rawList) {
-  if(currentUser.role === 'manager') return rawList;
-  return rawList.filter(x => x.cashierCode === currentUser.code);
-}
-
-function renderSuspended() {
-  let list = getFilteredList(suspendedOrders);
-  let b = document.getElementById("suspendedBody");
-  if(list.length === 0) { b.innerHTML = `<tr><td colspan="6">لا توجد أوردرات معلقة.</td></tr>`; return; }
-  b.innerHTML = list.map((o) => {
-    let rawIndex = suspendedOrders.findIndex(x => x.id === o.id && x.cashierCode === o.cashierCode);
-    let totalP = o.items.reduce((acc, x) => acc + itemTotal(x), 0);
-    return `<tr>
-      <td>${esc(o.date)}</td>
-      <td><b>${esc(o.customer)}</b></td>
-      <td><b>${esc(o.windowNum)}</b></td>
-      <td>${o.items.length}</td>
-      <td style="color:var(--pink);font-weight:bold">${totalP} ج.م</td>
-      <td>
-        <button class="primary" onclick="resumeSuspended(${rawIndex})">استكمال</button>
-        <button class="danger" onclick="deleteSuspended(${rawIndex})">حذف</button>
-      </td>
-    </tr>`;
-  }).join("");
-}
-
-function resumeSuspended(index) {
-  let list = getFilteredList(suspendedOrders);
-  let o = list[index];
-  editingSuspendedId = o.id;
-  document.getElementById("orderId").value = o.id;
-  document.getElementById("windowNum").value = o.windowNum || 1;
-  ["customer", "phone", "area", "address", "notes"].forEach(k => {
-      let el = document.getElementById(k);
-      if(el) el.value = o[k] || "";
-  });
-  currentItems = o.items ? JSON.parse(JSON.stringify(o.items)) : [];
-  switchTab('tab-new'); renderItems(); renderReceipt();
-}
-
-function deleteSuspended(index) {
-  if(confirm("حذف الأوردر المعلق؟")) {
-    let list = getFilteredList(suspendedOrders);
-    let o = list[index];
-    let realIndex = suspendedOrders.findIndex(x => x.id === o.id && x.cashierCode === o.cashierCode);
-    if(realIndex > -1) { suspendedOrders.splice(realIndex, 1); saveData(); renderSuspended(); }
-  }
-}
-
-function renderHistory() {
-  let q = (document.getElementById("historySearch").value || "").trim().toLowerCase();
-  let list = getFilteredList(orders).filter(o => {
-      let str = [String(o.id), String(o.windowNum), String(o.customer), String(o.phone), String(o.cashierName)].join(" ").toLowerCase();
-      return !q || str.includes(q);
-  });
-  let b = document.getElementById("historyBody");
-  if(list.length === 0) { b.innerHTML = `<tr><td colspan="9">لا توجد نتائج.</td></tr>`; return; }
-  b.innerHTML = list.slice(0, 50).map(o => {
-    let totalP = o.items.reduce((a, x) => a + itemTotal(x), 0);
-    return `<tr>
-      <td><b>${esc(o.id)}</b></td>
-      <td>${esc(o.date)}</td>
-      <td><b>${esc(o.windowNum)}</b></td>
-      <td><b>${esc(o.customer)}</b></td>
-      <td>${esc(o.phone)}</td>
-      <td>${o.items.reduce((a, x) => a + x.qty, 0)}</td>
-      <td style="color:var(--pink);font-weight:bold">${totalP} ج.م</td>
-      <td><b>${esc(o.cashierName)}</b></td>
-      <td><button class="primary" onclick="loadOrderToPrint('${o.id}', '${o.cashierCode}')">طباعة</button></td>
-    </tr>`;
-  }).join("");
-}
-
-// --- SECURE LOAD (DOES NOT HIJACK NEW ORDER COUNTER) ---
-function loadOrderToPrint(id, cashierCode) {
-  let o = orders.find(x => x.id == id && x.cashierCode == cashierCode);
-  if(!o) return;
-  // Just show preview in new tab or load into form without messing up active sequence counter
-  document.getElementById("orderId").value = o.id;
-  document.getElementById("windowNum").value = o.windowNum || 1;
-  ["customer", "phone", "area", "address", "notes"].forEach(k => {
-      let el = document.getElementById(k);
-      if(el) el.value = o[k] || "";
-  });
-  currentItems = o.items ? JSON.parse(JSON.stringify(o.items)) : [];
-  switchTab('tab-new'); renderItems(); renderReceipt();
-}
-
-function renderCancelList() {
-  let q = (document.getElementById("cancelSearch").value || "").trim().toLowerCase();
-  let list = getFilteredList(orders).filter(o => {
-      let str = [String(o.id), String(o.customer), String(o.cashierName)].join(" ").toLowerCase();
-      return !q || str.includes(q);
-  });
-  let b = document.getElementById("cancelBody");
-  if(list.length === 0) { b.innerHTML = `<tr><td colspan="7">لا توجد أوردرات.</td></tr>`; return; }
-  b.innerHTML = list.slice(0, 50).map(o => `
-    <tr>
-      <td><b>${esc(o.id)}</b></td>
-      <td>${esc(o.date)}</td>
-      <td>${esc(o.windowNum)}</td>
-      <td>${esc(o.customer)}</td>
-      <td>${esc(o.phone)}</td>
-      <td style="color:var(--pink);font-weight:bold">${o.items.reduce((a, x) => a + itemTotal(x), 0)} ج.م</td>
-      <td><button class="danger" onclick="deleteOrderForever('${o.id}', '${o.cashierCode}')">حذف ❌</button></td>
-    </tr>
-  `).join("");
-}
-
-function deleteOrderForever(id, cashierCode) {
-  if(confirm("حذف نهائي؟")) {
-    orders = orders.filter(x => !(x.id == id && x.cashierCode == cashierCode)); 
-    saveData(); renderCancelList();
-  }
-}
-
-let filteredOrdersForReport = [];
-function getOrderISODate(o) {
-  if (o.isoDate) return o.isoDate.split("T")[0];
+import React, { useState, useEffect } from 'react';
+import { 
+  Wallet, 
+  CreditCard, 
+  TrendingUp, 
+  Receipt, 
+  ShoppingBag, 
+  BookOpen, 
+  Plus, 
+  Trash2, 
+  Edit2, 
+  Check, 
+  X, 
+  Eye, 
+  EyeOff, 
+  Moon, 
+  Sun, 
+  Search, 
+  ArrowUpRight, 
+  ArrowDownLeft, 
+  AlertCircle,
+  FileText,
+  DollarSign,
+  Smartphone,
+  Globe,
+  Briefcase
+} from 'lucide-react';
+
+// ترحيل البيانات القديمة وتنظيف البيانات التجريبية مرة واحدة فقط
+const CURRENT_MIGRATION_VERSION = 'v2_clean_defaults';
+const checkAndCleanStorage = () => {
   try {
-    let p = o.date.split(" ")[0].split("/");
-    if (p.length === 3) return `${p[2]}-${p[1].padStart(2,'0')}-${p[0].padStart(2,'0')}`;
-  } catch(e) {}
-  return "";
-}
-
-function resetReports() {
-  let today = new Date().toISOString().split("T")[0];
-  document.getElementById("dateFrom").value = today; document.getElementById("dateTo").value = today;
-  filterReports();
-}
-
-function filterReports() {
-  let dFrom = document.getElementById("dateFrom").value;
-  let dTo = document.getElementById("dateTo").value;
-  let baseList = getFilteredList(orders);
-  filteredOrdersForReport = baseList.filter(o => {
-    let oDate = getOrderISODate(o);
-    if (!oDate) return true;
-    if (dFrom && oDate < dFrom) return false;
-    if (dTo && oDate > dTo) return false;
-    return true;
-  });
-  updateStatsUI();
-}
-
-function updateStatsUI() {
-  let tQ = 0, tV = 0;
-  filteredOrdersForReport.forEach(o => o.items.forEach(i => { tQ += i.qty; tV += itemTotal(i); }));
-  document.getElementById("sOrders").textContent = filteredOrdersForReport.length;
-  document.getElementById("sQty").textContent = tQ;
-  document.getElementById("sValue").textContent = tV;
-}
-
-function updateStats() {
-  if (!document.getElementById("dateFrom").value) {
-     let today = new Date().toISOString().split("T")[0];
-     document.getElementById("dateFrom").value = today; document.getElementById("dateTo").value = today;
+    const migration = localStorage.getItem('flousy_migration_version');
+    if (migration !== CURRENT_MIGRATION_VERSION) {
+      // تفريغ البيانات القديمة التجريبية للمحافظ والالتزامات والمصروفات والديون أول مرة فقط
+      localStorage.removeItem('flousy_accounts');
+      localStorage.removeItem('flousy_obligations');
+      localStorage.removeItem('flousy_essentials');
+      localStorage.removeItem('flousy_wishlist');
+      localStorage.removeItem('flousy_notes_debts');
+      localStorage.setItem('flousy_migration_version', CURRENT_MIGRATION_VERSION);
+    }
+  } catch (e) {
+    console.error("Migration error:", e);
   }
-  filterReports();
-}
+};
 
-function exportToExcel() {
-  if(filteredOrdersForReport.length === 0) { alert("لا توجد بيانات للتصدير."); return; }
-  let csvContent = "\uFEFFرقم الأوردر,التاريخ,الشباك,العميل,الموبايل,المنطقة,العنوان,الكمية,الإجمالي,الكاشير\n";
-  filteredOrdersForReport.forEach(o => {
-    let tQ = o.items.reduce((a, x) => a + x.qty, 0);
-    let tP = o.items.reduce((a, x) => a + itemTotal(x), 0);
-    csvContent += `"${o.id}","${o.date}","${o.windowNum}","${o.customer}","${o.phone}","${o.area}","${o.address}",${tQ},${tP},"${o.cashierName}"\n`;
+export default function App() {
+  // شاشة البداية الافتتاحية (Splash Screen) لمدة 5 ثوانٍ عند الفتح الأول فقط
+  const [showSplash, setShowSplash] = useState(true);
+
+  useEffect(() => {
+    checkAndCleanStorage();
+    const timer = setTimeout(() => {
+      setShowSplash(false);
+    }, 5000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // الحالة العامة للتطبيق
+  const [activeTab, setActiveTab] = useState('wallet'); // تبدأ في صفحة فلوسي افتراضياً
+  const [darkMode, setDarkMode] = useState(true);
+  const [hideBalances, setHideBalances] = useState(false);
+  const [toast, setToast] = useState(null);
+
+  // إظهار رسالة تنبيه نجاح / حذف
+  const showToast = (message) => {
+    setToast(message);
+    setTimeout(() => setToast(null), 3500);
+  };
+
+  // 1. المحافظ والحسابات (FLOUSY Wallet) - تبدأ فارغة تماماً
+  const [accounts, setAccounts] = useState(() => {
+    try {
+      const saved = localStorage.getItem('flousy_accounts');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
   });
-  let link = document.createElement("a");
-  link.href = URL.createObjectURL(new Blob([csvContent], { type: 'text/csv;charset=utf-8;' }));
-  link.download = "Flamingo_Reports_" + new Date().toISOString().split('T')[0] + ".csv";
-  link.click();
-}
 
-["customer", "phone", "area", "address", "notes"].forEach(x => {
-  document.getElementById(x).addEventListener("input", renderReceipt);
-});
-</script>
-<div class="no-print" style="text-align:center; padding:10px; font-size:12px; color:#718096; font-weight:bold;">
-  تم التطوير بواسطة: <span style="color:#F38198;">OE Vision</span>
-</div>
-</body>
-</html>
+  useEffect(() => {
+    localStorage.setItem('flousy_accounts', JSON.stringify(accounts));
+  }, [accounts]);
+
+  // 2. مصاريفي (My Expenses) - تبدأ فارغة تماماً
+  const [obligations, setObligations] = useState(() => {
+    try {
+      const saved = localStorage.getItem('flousy_obligations');
+      return saved ? JSON.parse(saved) : [];
+    } catch { return []; }
+  });
+
+  const [essentials, setEssentials] = useState(() => {
+    try {
+      const saved = localStorage.getItem('flousy_essentials');
+      return saved ? JSON.parse(saved) : [];
+    } catch { return []; }
+  });
+
+  const [wishlist, setWishlist] = useState(() => {
+    try {
+      const saved = localStorage.getItem('flousy_wishlist');
+      return saved ? JSON.parse(saved) : [];
+    } catch { return []; }
+  });
+
+  useEffect(() => {
+    localStorage.setItem('flousy_obligations', JSON.stringify(obligations));
+    localStorage.setItem('flousy_essentials', JSON.stringify(essentials));
+    localStorage.setItem('flousy_wishlist', JSON.stringify(wishlist));
+  }, [obligations, essentials, wishlist]);
+
+  // 3. ديوني وملاحظاتي (My Notes & Debts) - تبدأ فارغة تماماً
+  const [notesDebts, setNotesDebts] = useState(() => {
+    try {
+      const saved = localStorage.getItem('flousy_notes_debts');
+      return saved ? JSON.parse(saved) : [];
+    } catch { return []; }
+  });
+
+  useEffect(() => {
+    localStorage.setItem('flousy_notes_debts', JSON.stringify(notesDebts));
+  }, [notesDebts]);
+
+  // نافذة الإضافة والتعديل العامة
+  const [modalType, setModalType] = useState(null); // 'account', 'obligation', 'essential', 'wishlist', 'noteDebt'
+  const [editingItem, setEditingItem] = useState(null);
+
+  // إجماليات المحافظ النشطة
+  const totalBalance = accounts
+    .filter(acc => acc.status === 'active')
+    .reduce((sum, acc) => sum + (parseFloat(acc.balance) || 0), 0);
+
+  // إجماليات الالتزامات الشهرية
+  const totalObligations = obligations.reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0);
+  const paidObligations = obligations.filter(item => item.isPaid).reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0);
+
+  // عرض الشاشة الافتتاحية المتحركة لمدة 5 ثوانٍ
+  if (showSplash) {
+    return (
+      <div className="fixed inset-0 bg-[#0a0f0d] text-white flex flex-col items-center justify-center z-50 overflow-hidden font-sans select-none">
+        <div className="relative flex flex-col items-center">
+          {/* شعار حرف F مع خطوط الإضاءة */}
+          <div className="relative w-32 h-32 flex items-center justify-center mb-6">
+            <svg className="w-full h-full animate-pulse" viewBox="0 0 100 100" fill="none">
+              <path 
+                d="M30 20 H75 M30 20 V80 M30 50 H65" 
+                stroke="#10b981" 
+                strokeWidth="8" 
+                strokeLinecap="round" 
+                strokeLinejoin="round"
+                className="drop-shadow-[0_0_15px_rgba(16,185,129,0.8)]"
+              />
+            </svg>
+            <div className="absolute inset-0 bg-emerald-500/10 rounded-full blur-2xl animate-ping"></div>
+          </div>
+
+          {/* أعمدة النمو الثلاثة */}
+          <div className="flex items-end gap-2 h-12 mb-6">
+            <div className="w-3 bg-emerald-600 rounded-t-md animate-[bounce_1s_infinite_100ms] h-6"></div>
+            <div className="w-3 bg-emerald-500 rounded-t-md animate-[bounce_1s_infinite_200ms] h-9"></div>
+            <div className="w-3 bg-emerald-400 rounded-t-md animate-[bounce_1s_infinite_300ms] h-12"></div>
+          </div>
+
+          {/* اسم التطبيق */}
+          <h1 className="text-3xl font-extrabold tracking-wider text-white mb-2 font-mono">
+            FLOUSY
+          </h1>
+          
+          {/* العبارة الترويجية */}
+          <p className="text-emerald-400 text-sm font-medium tracking-wide mb-8">
+            Your Money. Your Control.
+          </p>
+
+          {/* شريط التحميل المضيء (5 ثواني) */}
+          <div className="w-48 h-1.5 bg-gray-800 rounded-full overflow-hidden">
+            <div className="h-full bg-emerald-500 rounded-full animate-[loading_5s_linear_forwards] shadow-[0_0_10px_#10b981]"></div>
+          </div>
+        </div>
+
+        <style>{`
+          @keyframes loading {
+            0% { width: 0%; }
+            100% { width: 100%; }
+          }
+        `}</style>
+      </div>
+    );
+  }
+
+  return (
+    <div dir="rtl" className={`min-h-screen font-sans transition-colors duration-300 ${darkMode ? 'bg-[#0f1711] text-gray-100' : 'bg-gray-50 text-gray-800'}`}>
+      
+      {/* شريط التنقل العلوي (Desktop & Header) */}
+      <header className={`sticky top-0 z-40 border-b backdrop-blur-md ${darkMode ? 'bg-[#0f1711]/80 border-emerald-900/30' : 'bg-white/80 border-emerald-100'}`}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+          
+          {/* الشعار والهوية */}
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-500 font-bold text-xl shadow-[0_0_10px_rgba(16,185,129,0.2)]">
+              F
+            </div>
+            <div>
+              <span className="text-lg font-bold tracking-tight bg-gradient-to-r from-emerald-400 to-teal-500 bg-clip-text text-transparent">
+                FLOUSY
+              </span>
+              <span className="hidden sm:inline-block mr-2 text-xs px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                Your Money. Your Control.
+              </span>
+            </div>
+          </div>
+
+          {/* أزرار التنقل الرئيسية بالترتيب المطلوب: فلوسي -> مصاريفي -> ديوني وملاحظاتي */}
+          <nav className="hidden md:flex items-center gap-1 bg-emerald-950/20 p-1 rounded-xl border border-emerald-500/20">
+            <button
+              onClick={() => setActiveTab('wallet')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                activeTab === 'wallet' 
+                  ? 'bg-emerald-500 text-slate-950 shadow-md font-semibold' 
+                  : 'text-gray-400 hover:text-white hover:bg-emerald-500/10'
+              }`}
+            >
+              <Wallet className="w-4 h-4" />
+              <span>فلوسي</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('expenses')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                activeTab === 'expenses' 
+                  ? 'bg-emerald-500 text-slate-950 shadow-md font-semibold' 
+                  : 'text-gray-400 hover:text-white hover:bg-emerald-500/10'
+              }`}
+            >
+              <Receipt className="w-4 h-4" />
+              <span>مصاريفي</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('notesDebts')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                activeTab === 'notesDebts' 
+                  ? 'bg-emerald-500 text-slate-950 shadow-md font-semibold' 
+                  : 'text-gray-400 hover:text-white hover:bg-emerald-500/10'
+              }`}
+            >
+              <BookOpen className="w-4 h-4" />
+              <span>ديوني وملاحظاتي</span>
+            </button>
+          </nav>
+
+          {/* أدوات التحكم (الثيم وإخفاء الأرصدة) */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setHideBalances(!hideBalances)}
+              className={`p-2.5 rounded-xl border transition-colors ${darkMode ? 'bg-emerald-950/40 border-emerald-900/50 text-emerald-400 hover:bg-emerald-900/50' : 'bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100'}`}
+              title={hideBalances ? "إظهار الأرصدة" : "إخفاء الأرصدة"}
+            >
+              {hideBalances ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </button>
+
+            <button
+              onClick={() => setDarkMode(!darkMode)}
+              className={`p-2.5 rounded-xl border transition-colors ${darkMode ? 'bg-emerald-950/40 border-emerald-900/50 text-amber-400 hover:bg-emerald-900/50' : 'bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100'}`}
+              title="تغيير المظهر"
+            >
+              {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            </button>
+          </div>
+
+        </div>
+      </header>
+
+      {/* المحتوى الرئيسي */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-24">
+        
+        {/* ================= الصفحة الأولى: فلوسي (My Wallet) ================= */}
+        {activeTab === 'wallet' && (
+          <div className="space-y-6 animate-fadeIn">
+            
+            {/* بطاقة إجمالي الأموال */}
+            <div className={`relative overflow-hidden p-6 sm:p-8 rounded-3xl border shadow-xl ${darkMode ? 'bg-gradient-to-br from-emerald-950/80 via-[#0f1711] to-teal-950/60 border-emerald-800/40' : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50 border-emerald-200'}`}>
+              <div className="absolute top-0 left-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
+              
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 relative z-10">
+                <div>
+                  <span className="text-xs font-semibold uppercase tracking-wider text-emerald-500 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+                    إجمالي الأموال المتاحة
+                  </span>
+                  <h2 className="text-3xl sm:text-4xl font-extrabold mt-3 tracking-tight font-mono text-emerald-400">
+                    {hideBalances ? '•••••• EGP' : `${totalBalance.toLocaleString()} EGP`}
+                  </h2>
+                  <p className="text-xs text-gray-400 mt-1">يتم احتساب الحسابات النشطة فقط تلقائياً</p>
+                </div>
+
+                <button
+                  onClick={() => { setEditingItem(null); setModalType('account'); }}
+                  className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold shadow-lg shadow-emerald-500/20 transition-all transform active:scale-95"
+                >
+                  <Plus className="w-5 h-5" />
+                  <span>إضافة حساب أو محفظة</span>
+                </button>
+              </div>
+            </div>
+
+            {/* قائمة الحسابات والمحافظ */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-bold flex items-center gap-2">
+                  <Wallet className="w-5 h-5 text-emerald-500" />
+                  <span>حساباتي ومحافظي</span>
+                </h3>
+                <span className="text-xs text-gray-400">({accounts.length} حسابات مسجلة)</span>
+              </div>
+
+              {accounts.length === 0 ? (
+                /* Empty State للحسابات */
+                <div className={`p-12 text-center rounded-3xl border border-dashed ${darkMode ? 'bg-emerald-950/10 border-emerald-900/50 text-gray-400' : 'bg-white border-emerald-200 text-gray-500'}`}>
+                  <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-500">
+                    <Wallet className="w-8 h-8" />
+                  </div>
+                  <h4 className="text-base font-bold mb-1 text-gray-200">لم تضف أي حسابات حتى الآن</h4>
+                  <p className="text-sm text-gray-400 mb-6">قم بإضافة محفظتك الأولى أو حسابك البنكي لمتابعة أموالك بدقة.</p>
+                  <button
+                    onClick={() => { setEditingItem(null); setModalType('account'); }}
+                    className="px-6 py-2.5 rounded-xl bg-emerald-500 text-slate-950 font-bold text-sm shadow-md hover:bg-emerald-400 transition-all"
+                  >
+                    إضافة أول حساب
+                  </button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {accounts.map(acc => (
+                    <div 
+                      key={acc.id} 
+                      className={`p-5 rounded-2xl border transition-all relative group ${
+                        darkMode ? 'bg-emerald-950/20 border-emerald-900/40 hover:border-emerald-500/40' : 'bg-white border-emerald-100 hover:border-emerald-300 shadow-sm'
+                      }`}
+                    >
+                      <div className="flex justify-between items-start mb-3">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
+                            {acc.type === 'vodafone' || acc.type === 'etisalat' ? <Smartphone className="w-5 h-5" /> : 
+                             acc.type === 'bank' ? <CreditCard className="w-5 h-5" /> : 
+                             acc.type === 'paypal' ? <Globe className="w-5 h-5" /> : <DollarSign className="w-5 h-5" />}
+                          </div>
+                          <div>
+                            <h4 className="font-bold text-base">{acc.name}</h4>
+                            <span className="text-xs text-gray-400 font-mono">{acc.number || 'بدون رقم محفظة'}</span>
+                          </div>
+                        </div>
+
+                        <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${
+                          acc.status === 'active' 
+                            ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
+                            : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                        }`}>
+                          {acc.status === 'active' ? 'نشط' : 'غير منشأ'}
+                        </span>
+                      </div>
+
+                      <div className="mt-4 pt-3 border-t border-emerald-900/20 flex justify-between items-end">
+                        <div>
+                          <span className="text-xs text-gray-400">الرصيد الحالي:</span>
+                          <p className="text-lg font-extrabold font-mono text-emerald-400">
+                            {acc.status === 'inactive' ? '---' : (hideBalances ? '•••••• EGP' : `${parseFloat(acc.balance || 0).toLocaleString()} EGP`)}
+                          </p>
+                        </div>
+
+                        <div className="flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
+                          <button
+                            onClick={() => { setEditingItem(acc); setModalType('account'); }}
+                            className="p-2 rounded-lg hover:bg-emerald-500/20 text-emerald-400 transition-colors"
+                            title="تعديل"
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => {
+                              if (confirm('هل أنت متأكد من حذف هذا الحساب؟')) {
+                                setAccounts(accounts.filter(a => a.id !== acc.id));
+                                showToast('تم حذف الحساب بنجاح');
+                              }
+                            }}
+                            className="p-2 rounded-lg hover:bg-red-500/20 text-red-400 transition-colors"
+                            title="حذف"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+          </div>
+        )}
+
+        {/* ================= الصفحة الثانية: مصاريفي (My Expenses) ================= */}
+        {activeTab === 'expenses' && (
+          <div className="space-y-8 animate-fadeIn">
+            
+            {/* قسم 1: الالتزامات والاشتراكات الشهرية */}
+            <div className="space-y-4">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                  <h3 className="text-lg font-bold flex items-center gap-2">
+                    <CreditCard className="w-5 h-5 text-emerald-500" />
+                    <span>الالتزامات والاشتراكات الشهرية</span>
+                  </h3>
+                  <p className="text-xs text-gray-400 mt-0.5">إجمالي الالتزامات: {totalObligations.toLocaleString()} EGP | المدفوع: {paidObligations.toLocaleString()} EGP</p>
+                </div>
+
+                <button
+                  onClick={() => { setEditingItem(null); setModalType('obligation'); }}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-sm shadow-md transition-all"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>إضافة اشتراك</span>
+                </button>
+              </div>
+
+              {obligations.length === 0 ? (
+                <div className={`p-8 text-center rounded-2xl border border-dashed ${darkMode ? 'bg-emerald-950/10 border-emerald-900/50 text-gray-400' : 'bg-white border-emerald-200 text-gray-500'}`}>
+                  <p className="text-sm mb-3">لا توجد اشتراكات مسجلة حالياً.</p>
+                  <button onClick={() => { setEditingItem(null); setModalType('obligation'); }} className="px-4 py-2 bg-emerald-500 text-slate-950 text-xs font-bold rounded-lg">إضاف
+                  
