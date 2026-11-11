@@ -1,429 +1,228 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  Wallet, 
-  CreditCard, 
-  TrendingUp, 
-  Receipt, 
-  ShoppingBag, 
-  BookOpen, 
-  Plus, 
-  Trash2, 
-  Edit2, 
-  Check, 
-  X, 
-  Eye, 
-  EyeOff, 
-  Moon, 
-  Sun, 
-  Search, 
-  ArrowUpRight, 
-  ArrowDownLeft, 
-  AlertCircle,
-  FileText,
-  DollarSign,
-  Smartphone,
-  Globe,
-  Briefcase
-} from 'lucide-react';
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title-[#10b981]">FLOUSY – Personal Finance Dashboard</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- React & Babel -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="bg-[#0f1711] text-gray-100">
+  <div id="root"></div>
 
-// ترحيل البيانات القديمة وتنظيف البيانات التجريبية مرة واحدة فقط
-const CURRENT_MIGRATION_VERSION = 'v2_clean_defaults';
-const checkAndCleanStorage = () => {
-  try {
-    const migration = localStorage.getItem('flousy_migration_version');
-    if (migration !== CURRENT_MIGRATION_VERSION) {
-      // تفريغ البيانات القديمة التجريبية للمحافظ والالتزامات والمصروفات والديون أول مرة فقط
-      localStorage.removeItem('flousy_accounts');
-      localStorage.removeItem('flousy_obligations');
-      localStorage.removeItem('flousy_essentials');
-      localStorage.removeItem('flousy_wishlist');
-      localStorage.removeItem('flousy_notes_debts');
-      localStorage.setItem('flousy_migration_version', CURRENT_MIGRATION_VERSION);
-    }
-  } catch (e) {
-    console.error("Migration error:", e);
-  }
-};
+  <script type="text/babel">
+    const { useState, useEffect } = React;
 
-export default function App() {
-  // شاشة البداية الافتتاحية (Splash Screen) لمدة 5 ثوانٍ عند الفتح الأول فقط
-  const [showSplash, setShowSplash] = useState(true);
+    const CURRENT_MIGRATION_VERSION = 'v2_clean_defaults';
+    const checkAndCleanStorage = () => {
+      try {
+        const migration = localStorage.getItem('flousy_migration_version');
+        if (migration !== CURRENT_MIGRATION_VERSION) {
+          localStorage.removeItem('flousy_accounts');
+          localStorage.removeItem('flousy_obligations');
+          localStorage.removeItem('flousy_essentials');
+          localStorage.removeItem('flousy_wishlist');
+          localStorage.removeItem('flousy_notes_debts');
+          localStorage.setItem('flousy_migration_version', CURRENT_MIGRATION_VERSION);
+        }
+      } catch (e) {
+        console.error("Migration error:", e);
+      }
+    };
 
-  useEffect(() => {
-    checkAndCleanStorage();
-    const timer = setTimeout(() => {
-      setShowSplash(false);
-    }, 5000);
-    return () => clearTimeout(timer);
-  }, []);
+    function App() {
+      const [showSplash, setShowSplash] = useState(true);
 
-  // الحالة العامة للتطبيق
-  const [activeTab, setActiveTab] = useState('wallet'); // تبدأ في صفحة فلوسي افتراضياً
-  const [darkMode, setDarkMode] = useState(true);
-  const [hideBalances, setHideBalances] = useState(false);
-  const [toast, setToast] = useState(null);
+      useEffect(() => {
+        checkAndCleanStorage();
+        const timer = setTimeout(() => setShowSplash(false), 5000);
+        return () => clearTimeout(timer);
+      }, []);
 
-  // إظهار رسالة تنبيه نجاح / حذف
-  const showToast = (message) => {
-    setToast(message);
-    setTimeout(() => setToast(null), 3500);
-  };
+      const [activeTab, setActiveTab] = useState('wallet');
+      const [darkMode, setDarkMode] = useState(true);
+      const [hideBalances, setHideBalances] = useState(false);
+      const [toast, setToast] = useState(null);
 
-  // 1. المحافظ والحسابات (FLOUSY Wallet) - تبدأ فارغة تماماً
-  const [accounts, setAccounts] = useState(() => {
-    try {
-      const saved = localStorage.getItem('flousy_accounts');
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
-  });
+      const showToast = (msg) => {
+        setToast(msg);
+        setTimeout(() => setToast(null), 3500);
+      };
 
-  useEffect(() => {
-    localStorage.setItem('flousy_accounts', JSON.stringify(accounts));
-  }, [accounts]);
+      const [accounts, setAccounts] = useState(() => {
+        try {
+          const saved = localStorage.getItem('flousy_accounts');
+          return saved ? JSON.parse(saved) : [];
+        } catch { return []; }
+      });
 
-  // 2. مصاريفي (My Expenses) - تبدأ فارغة تماماً
-  const [obligations, setObligations] = useState(() => {
-    try {
-      const saved = localStorage.getItem('flousy_obligations');
-      return saved ? JSON.parse(saved) : [];
-    } catch { return []; }
-  });
+      const [obligations, setObligations] = useState(() => {
+        try {
+          const saved = localStorage.getItem('flousy_obligations');
+          return saved ? JSON.parse(saved) : [];
+        } catch { return []; }
+      });
 
-  const [essentials, setEssentials] = useState(() => {
-    try {
-      const saved = localStorage.getItem('flousy_essentials');
-      return saved ? JSON.parse(saved) : [];
-    } catch { return []; }
-  });
+      const [essentials, setEssentials] = useState(() => {
+        try {
+          const saved = localStorage.getItem('flousy_essentials');
+          return saved ? JSON.parse(saved) : [];
+        } catch { return []; }
+      });
 
-  const [wishlist, setWishlist] = useState(() => {
-    try {
-      const saved = localStorage.getItem('flousy_wishlist');
-      return saved ? JSON.parse(saved) : [];
-    } catch { return []; }
-  });
+      const [wishlist, setWishlist] = useState(() => {
+        try {
+          const saved = localStorage.getItem('flousy_wishlist');
+          return saved ? JSON.parse(saved) : [];
+        } catch { return []; }
+      });
 
-  useEffect(() => {
-    localStorage.setItem('flousy_obligations', JSON.stringify(obligations));
-    localStorage.setItem('flousy_essentials', JSON.stringify(essentials));
-    localStorage.setItem('flousy_wishlist', JSON.stringify(wishlist));
-  }, [obligations, essentials, wishlist]);
+      const [notesDebts, setNotesDebts] = useState(() => {
+        try {
+          const saved = localStorage.getItem('flousy_notes_debts');
+          return saved ? JSON.parse(saved) : [];
+        } catch { return []; }
+      });
 
-  // 3. ديوني وملاحظاتي (My Notes & Debts) - تبدأ فارغة تماماً
-  const [notesDebts, setNotesDebts] = useState(() => {
-    try {
-      const saved = localStorage.getItem('flousy_notes_debts');
-      return saved ? JSON.parse(saved) : [];
-    } catch { return []; }
-  });
+      useEffect(() => { localStorage.setItem('flousy_accounts', JSON.stringify(accounts)); }, [accounts]);
+      useEffect(() => { localStorage.setItem('flousy_obligations', JSON.stringify(obligations)); }, [obligations]);
+      useEffect(() => { localStorage.setItem('flousy_essentials', JSON.stringify(essentials)); }, [essentials]);
+      useEffect(() => { localStorage.setItem('flousy_wishlist', JSON.stringify(wishlist)); }, [wishlist]);
+      useEffect(() => { localStorage.setItem('flousy_notes_debts', JSON.stringify(notesDebts)); }, [notesDebts]);
 
-  useEffect(() => {
-    localStorage.setItem('flousy_notes_debts', JSON.stringify(notesDebts));
-  }, [notesDebts]);
+      const [modalType, setModalType] = useState(null);
+      const [editingItem, setEditingItem] = useState(null);
 
-  // نافذة الإضافة والتعديل العامة
-  const [modalType, setModalType] = useState(null); // 'account', 'obligation', 'essential', 'wishlist', 'noteDebt'
-  const [editingItem, setEditingItem] = useState(null);
+      const totalBalance = accounts
+        .filter(acc => acc.status === 'active')
+        .reduce((sum, acc) => sum + (parseFloat(acc.balance) || 0), 0);
 
-  // إجماليات المحافظ النشطة
-  const totalBalance = accounts
-    .filter(acc => acc.status === 'active')
-    .reduce((sum, acc) => sum + (parseFloat(acc.balance) || 0), 0);
+      const totalObligations = obligations.reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0);
+      const paidObligations = obligations.filter(item => item.isPaid).reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0);
 
-  // إجماليات الالتزامات الشهرية
-  const totalObligations = obligations.reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0);
-  const paidObligations = obligations.filter(item => item.isPaid).reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0);
-
-  // عرض الشاشة الافتتاحية المتحركة لمدة 5 ثوانٍ
-  if (showSplash) {
-    return (
-      <div className="fixed inset-0 bg-[#0a0f0d] text-white flex flex-col items-center justify-center z-50 overflow-hidden font-sans select-none">
-        <div className="relative flex flex-col items-center">
-          {/* شعار حرف F مع خطوط الإضاءة */}
-          <div className="relative w-32 h-32 flex items-center justify-center mb-6">
-            <svg className="w-full h-full animate-pulse" viewBox="0 0 100 100" fill="none">
-              <path 
-                d="M30 20 H75 M30 20 V80 M30 50 H65" 
-                stroke="#10b981" 
-                strokeWidth="8" 
-                strokeLinecap="round" 
-                strokeLinejoin="round"
-                className="drop-shadow-[0_0_15px_rgba(16,185,129,0.8)]"
-              />
-            </svg>
-            <div className="absolute inset-0 bg-emerald-500/10 rounded-full blur-2xl animate-ping"></div>
-          </div>
-
-          {/* أعمدة النمو الثلاثة */}
-          <div className="flex items-end gap-2 h-12 mb-6">
-            <div className="w-3 bg-emerald-600 rounded-t-md animate-[bounce_1s_infinite_100ms] h-6"></div>
-            <div className="w-3 bg-emerald-500 rounded-t-md animate-[bounce_1s_infinite_200ms] h-9"></div>
-            <div className="w-3 bg-emerald-400 rounded-t-md animate-[bounce_1s_infinite_300ms] h-12"></div>
-          </div>
-
-          {/* اسم التطبيق */}
-          <h1 className="text-3xl font-extrabold tracking-wider text-white mb-2 font-mono">
-            FLOUSY
-          </h1>
-          
-          {/* العبارة الترويجية */}
-          <p className="text-emerald-400 text-sm font-medium tracking-wide mb-8">
-            Your Money. Your Control.
-          </p>
-
-          {/* شريط التحميل المضيء (5 ثواني) */}
-          <div className="w-48 h-1.5 bg-gray-800 rounded-full overflow-hidden">
-            <div className="h-full bg-emerald-500 rounded-full animate-[loading_5s_linear_forwards] shadow-[0_0_10px_#10b981]"></div>
-          </div>
-        </div>
-
-        <style>{`
-          @keyframes loading {
-            0% { width: 0%; }
-            100% { width: 100%; }
-          }
-        `}</style>
-      </div>
-    );
-  }
-
-  return (
-    <div dir="rtl" className={`min-h-screen font-sans transition-colors duration-300 ${darkMode ? 'bg-[#0f1711] text-gray-100' : 'bg-gray-50 text-gray-800'}`}>
-      
-      {/* شريط التنقل العلوي (Desktop & Header) */}
-      <header className={`sticky top-0 z-40 border-b backdrop-blur-md ${darkMode ? 'bg-[#0f1711]/80 border-emerald-900/30' : 'bg-white/80 border-emerald-100'}`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          
-          {/* الشعار والهوية */}
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-500 font-bold text-xl shadow-[0_0_10px_rgba(16,185,129,0.2)]">
-              F
+      if (showSplash) {
+        return (
+          <div className="fixed inset-0 bg-[#0a0f0d] text-white flex flex-col items-center justify-center z-50 font-sans select-none">
+            <div className="relative flex flex-col items-center">
+              <div className="relative w-32 h-32 flex items-center justify-center mb-6">
+                <svg className="w-full h-full animate-pulse" viewBox="0 0 100 100" fill="none">
+                  <path d="M30 20 H75 M30 20 V80 M30 50 H65" stroke="#10b981" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </div>
+              <div className="flex items-end gap-2 h-12 mb-6">
+                <div className="w-3 bg-emerald-600 rounded-t-md animate-bounce h-6"></div>
+                <div className="w-3 bg-emerald-500 rounded-t-md animate-bounce h-9"></div>
+                <div className="w-3 bg-emerald-400 rounded-t-md animate-bounce h-12"></div>
+              </div>
+              <h1 className="text-3xl font-extrabold tracking-wider text-white mb-2 font-mono">FLOUSY</h1>
+              <p className="text-emerald-400 text-sm font-medium mb-8">Your Money. Your Control.</p>
+              <div className="w-48 h-1.5 bg-gray-800 rounded-full overflow-hidden">
+                <div className="h-full bg-emerald-500 rounded-full animate-[loading_5s_linear_forwards]"></div>
+              </div>
             </div>
-            <div>
-              <span className="text-lg font-bold tracking-tight bg-gradient-to-r from-emerald-400 to-teal-500 bg-clip-text text-transparent">
-                FLOUSY
-              </span>
-              <span className="hidden sm:inline-block mr-2 text-xs px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                Your Money. Your Control.
-              </span>
-            </div>
+            <style>{`@keyframes loading { 0% { width: 0%; } 100% { width: 100%; } }`}</style>
           </div>
+        );
+      }
 
-          {/* أزرار التنقل الرئيسية بالترتيب المطلوب: فلوسي -> مصاريفي -> ديوني وملاحظاتي */}
-          <nav className="hidden md:flex items-center gap-1 bg-emerald-950/20 p-1 rounded-xl border border-emerald-500/20">
-            <button
-              onClick={() => setActiveTab('wallet')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                activeTab === 'wallet' 
-                  ? 'bg-emerald-500 text-slate-950 shadow-md font-semibold' 
-                  : 'text-gray-400 hover:text-white hover:bg-emerald-500/10'
-              }`}
-            >
-              <Wallet className="w-4 h-4" />
-              <span>فلوسي</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('expenses')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                activeTab === 'expenses' 
-                  ? 'bg-emerald-500 text-slate-950 shadow-md font-semibold' 
-                  : 'text-gray-400 hover:text-white hover:bg-emerald-500/10'
-              }`}
-            >
-              <Receipt className="w-4 h-4" />
-              <span>مصاريفي</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('notesDebts')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                activeTab === 'notesDebts' 
-                  ? 'bg-emerald-500 text-slate-950 shadow-md font-semibold' 
-                  : 'text-gray-400 hover:text-white hover:bg-emerald-500/10'
-              }`}
-            >
-              <BookOpen className="w-4 h-4" />
-              <span>ديوني وملاحظاتي</span>
-            </button>
-          </nav>
-
-          {/* أدوات التحكم (الثيم وإخفاء الأرصدة) */}
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setHideBalances(!hideBalances)}
-              className={`p-2.5 rounded-xl border transition-colors ${darkMode ? 'bg-emerald-950/40 border-emerald-900/50 text-emerald-400 hover:bg-emerald-900/50' : 'bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100'}`}
-              title={hideBalances ? "إظهار الأرصدة" : "إخفاء الأرصدة"}
-            >
-              {hideBalances ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-            </button>
-
-            <button
-              onClick={() => setDarkMode(!darkMode)}
-              className={`p-2.5 rounded-xl border transition-colors ${darkMode ? 'bg-emerald-950/40 border-emerald-900/50 text-amber-400 hover:bg-emerald-900/50' : 'bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100'}`}
-              title="تغيير المظهر"
-            >
-              {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-            </button>
-          </div>
-
-        </div>
-      </header>
-
-      {/* المحتوى الرئيسي */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-24">
-        
-        {/* ================= الصفحة الأولى: فلوسي (My Wallet) ================= */}
-        {activeTab === 'wallet' && (
-          <div className="space-y-6 animate-fadeIn">
-            
-            {/* بطاقة إجمالي الأموال */}
-            <div className={`relative overflow-hidden p-6 sm:p-8 rounded-3xl border shadow-xl ${darkMode ? 'bg-gradient-to-br from-emerald-950/80 via-[#0f1711] to-teal-950/60 border-emerald-800/40' : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50 border-emerald-200'}`}>
-              <div className="absolute top-0 left-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
-              
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 relative z-10">
+      return (
+        <div dir="rtl" className={`min-h-screen font-sans transition-colors ${darkMode ? 'bg-[#0f1711] text-gray-100' : 'bg-gray-50 text-gray-800'}`}>
+          <header className={`sticky top-0 z-40 border-b backdrop-blur-md ${darkMode ? 'bg-[#0f1711]/80 border-emerald-900/30' : 'bg-white/80 border-emerald-100'}`}>
+            <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-500 font-bold text-xl">F</div>
                 <div>
-                  <span className="text-xs font-semibold uppercase tracking-wider text-emerald-500 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20">
-                    إجمالي الأموال المتاحة
-                  </span>
-                  <h2 className="text-3xl sm:text-4xl font-extrabold mt-3 tracking-tight font-mono text-emerald-400">
-                    {hideBalances ? '•••••• EGP' : `${totalBalance.toLocaleString()} EGP`}
-                  </h2>
-                  <p className="text-xs text-gray-400 mt-1">يتم احتساب الحسابات النشطة فقط تلقائياً</p>
+                  <span className="text-lg font-bold text-emerald-400">FLOUSY</span>
+                  <span className="hidden sm:inline-block mr-2 text-xs px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400">Your Money. Your Control.</span>
                 </div>
-
-                <button
-                  onClick={() => { setEditingItem(null); setModalType('account'); }}
-                  className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold shadow-lg shadow-emerald-500/20 transition-all transform active:scale-95"
-                >
-                  <Plus className="w-5 h-5" />
-                  <span>إضافة حساب أو محفظة</span>
-                </button>
               </div>
+
+              <nav className="flex items-center gap-1 bg-emerald-950/20 p-1 rounded-xl border border-emerald-500/20">
+                <button onClick={() => setActiveTab('wallet')} className={`px-4 py-2 rounded-lg text-sm font-medium ${activeTab === 'wallet' ? 'bg-emerald-500 text-slate-950 font-bold' : 'text-gray-400'}`}>فلوسي</button>
+                <button onClick={() => setActiveTab('expenses')} className={`px-4 py-2 rounded-lg text-sm font-medium ${activeTab === 'expenses' ? 'bg-emerald-500 text-slate-950 font-bold' : 'text-gray-400'}`}>مصاريفي</button>
+                <button onClick={() => setActiveTab('notesDebts')} className={`px-4 py-2 rounded-lg text-sm font-medium ${activeTab === 'notesDebts' ? 'bg-emerald-500 text-slate-950 font-bold' : 'text-gray-400'}`}>ديوني وملاحظاتي</button>
+              </nav>
+
+              <button onClick={() => setDarkMode(!darkMode)} className="p-2 rounded-xl border border-emerald-800 text-amber-400">
+                {darkMode ? '☀️' : '🌙'}
+              </button>
             </div>
+          </header>
 
-            {/* قائمة الحسابات والمحافظ */}
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-bold flex items-center gap-2">
-                  <Wallet className="w-5 h-5 text-emerald-500" />
-                  <span>حساباتي ومحافظي</span>
-                </h3>
-                <span className="text-xs text-gray-400">({accounts.length} حسابات مسجلة)</span>
-              </div>
-
-              {accounts.length === 0 ? (
-                /* Empty State للحسابات */
-                <div className={`p-12 text-center rounded-3xl border border-dashed ${darkMode ? 'bg-emerald-950/10 border-emerald-900/50 text-gray-400' : 'bg-white border-emerald-200 text-gray-500'}`}>
-                  <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-500">
-                    <Wallet className="w-8 h-8" />
+          <main className="max-w-7xl mx-auto px-4 py-8">
+            {activeTab === 'wallet' && (
+              <div className="space-y-6">
+                <div className="p-8 rounded-3xl border bg-gradient-to-br from-emerald-950 to-teal-950 border-emerald-800 flex justify-between items-center">
+                  <div>
+                    <span className="text-xs font-semibold text-emerald-400">إجمالي الأموال</span>
+                    <h2 className="text-4xl font-extrabold mt-2 font-mono text-emerald-400">{hideBalances ? '•••••• EGP' : `${totalBalance.toLocaleString()} EGP`}</h2>
                   </div>
-                  <h4 className="text-base font-bold mb-1 text-gray-200">لم تضف أي حسابات حتى الآن</h4>
-                  <p className="text-sm text-gray-400 mb-6">قم بإضافة محفظتك الأولى أو حسابك البنكي لمتابعة أموالك بدقة.</p>
-                  <button
-                    onClick={() => { setEditingItem(null); setModalType('account'); }}
-                    className="px-6 py-2.5 rounded-xl bg-emerald-500 text-slate-950 font-bold text-sm shadow-md hover:bg-emerald-400 transition-all"
-                  >
-                    إضافة أول حساب
-                  </button>
+                  <button onClick={() => { setEditingItem(null); setModalType('account'); }} className="px-5 py-3 rounded-2xl bg-emerald-500 text-slate-950 font-bold">+ إضافة حساب</button>
                 </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {accounts.map(acc => (
-                    <div 
-                      key={acc.id} 
-                      className={`p-5 rounded-2xl border transition-all relative group ${
-                        darkMode ? 'bg-emerald-950/20 border-emerald-900/40 hover:border-emerald-500/40' : 'bg-white border-emerald-100 hover:border-emerald-300 shadow-sm'
-                      }`}
-                    >
-                      <div className="flex justify-between items-start mb-3">
-                        <div className="flex items-center gap-3">
-                          <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
-                            {acc.type === 'vodafone' || acc.type === 'etisalat' ? <Smartphone className="w-5 h-5" /> : 
-                             acc.type === 'bank' ? <CreditCard className="w-5 h-5" /> : 
-                             acc.type === 'paypal' ? <Globe className="w-5 h-5" /> : <DollarSign className="w-5 h-5" />}
-                          </div>
-                          <div>
-                            <h4 className="font-bold text-base">{acc.name}</h4>
-                            <span className="text-xs text-gray-400 font-mono">{acc.number || 'بدون رقم محفظة'}</span>
-                          </div>
-                        </div>
-
-                        <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${
-                          acc.status === 'active' 
-                            ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
-                            : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-                        }`}>
-                          {acc.status === 'active' ? 'نشط' : 'غير منشأ'}
-                        </span>
+                    <div key={acc.id} className="p-5 rounded-2xl border bg-emerald-950/20 border-emerald-900 flex justify-between items-center">
+                      <div>
+                        <h4 className="font-bold">{acc.name}</h4>
+                        <p className="text-emerald-400 font-mono font-bold mt-1">{parseFloat(acc.balance || 0).toLocaleString()} EGP</p>
                       </div>
-
-                      <div className="mt-4 pt-3 border-t border-emerald-900/20 flex justify-between items-end">
-                        <div>
-                          <span className="text-xs text-gray-400">الرصيد الحالي:</span>
-                          <p className="text-lg font-extrabold font-mono text-emerald-400">
-                            {acc.status === 'inactive' ? '---' : (hideBalances ? '•••••• EGP' : `${parseFloat(acc.balance || 0).toLocaleString()} EGP`)}
-                          </p>
-                        </div>
-
-                        <div className="flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
-                          <button
-                            onClick={() => { setEditingItem(acc); setModalType('account'); }}
-                            className="p-2 rounded-lg hover:bg-emerald-500/20 text-emerald-400 transition-colors"
-                            title="تعديل"
-                          >
-                            <Edit2 className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => {
-                              if (confirm('هل أنت متأكد من حذف هذا الحساب؟')) {
-                                setAccounts(accounts.filter(a => a.id !== acc.id));
-                                showToast('تم حذف الحساب بنجاح');
-                              }
-                            }}
-                            className="p-2 rounded-lg hover:bg-red-500/20 text-red-400 transition-colors"
-                            title="حذف"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </div>
+                      <button onClick={() => setAccounts(accounts.filter(a => a.id !== acc.id))} className="text-red-400 text-xs">حذف</button>
                     </div>
                   ))}
                 </div>
-              )}
-            </div>
-
-          </div>
-        )}
-
-        {/* ================= الصفحة الثانية: مصاريفي (My Expenses) ================= */}
-        {activeTab === 'expenses' && (
-          <div className="space-y-8 animate-fadeIn">
-            
-            {/* قسم 1: الالتزامات والاشتراكات الشهرية */}
-            <div className="space-y-4">
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <div>
-                  <h3 className="text-lg font-bold flex items-center gap-2">
-                    <CreditCard className="w-5 h-5 text-emerald-500" />
-                    <span>الالتزامات والاشتراكات الشهرية</span>
-                  </h3>
-                  <p className="text-xs text-gray-400 mt-0.5">إجمالي الالتزامات: {totalObligations.toLocaleString()} EGP | المدفوع: {paidObligations.toLocaleString()} EGP</p>
-                </div>
-
-                <button
-                  onClick={() => { setEditingItem(null); setModalType('obligation'); }}
-                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-sm shadow-md transition-all"
-                >
-                  <Plus className="w-4 h-4" />
-                  <span>إضافة اشتراك</span>
-                </button>
               </div>
+            )}
 
-              {obligations.length === 0 ? (
-                <div className={`p-8 text-center rounded-2xl border border-dashed ${darkMode ? 'bg-emerald-950/10 border-emerald-900/50 text-gray-400' : 'bg-white border-emerald-200 text-gray-500'}`}>
-                  <p className="text-sm mb-3">لا توجد اشتراكات مسجلة حالياً.</p>
-                  <button onClick={() => { setEditingItem(null); setModalType('obligation'); }} className="px-4 py-2 bg-emerald-500 text-slate-950 text-xs font-bold rounded-lg">إضاف
+            {activeTab === 'expenses' && (
+              <div className="space-y-6">
+                <div className="flex justify-between items-center">
+                  <h3 className="font-bold text-lg">الاشتراكات الشهرية</h3>
+                  <button onClick={() => { setEditingItem(null); setModalType('obligation'); }} className="px-4 py-2 bg-emerald-500 text-slate-950 font-bold text-sm rounded-xl">+ إضافة اشتراك</button>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {obligations.map(item => (
+                    <div key={item.id} className="p-4 rounded-xl border bg-emerald-950/20 border-emerald-900 flex justify-between">
+                      <div>
+                        <h4 className="font-bold">{item.name}</h4>
+                        <p className="text-emerald-400 font-mono">{item.amount} EGP</p>
+                      </div>
+                      <button onClick={() => setObligations(obligations.filter(o => o.id !== item.id))} className="text-red-400 text-xs">حذف</button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'notesDebts' && (
+              <div className="space-y-6">
+                <div className="flex justify-between items-center">
+                  <h3 className="font-bold text-lg">الديون والملاحظات</h3>
+                  <button onClick={() => { setEditingItem(null); setModalType('noteDebt'); }} className="px-4 py-2 bg-emerald-500 text-slate-950 font-bold text-sm rounded-xl">+ إضافة ملاحظة</button>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {notesDebts.map(item => (
+                    <div key={item.id} className="p-4 rounded-xl border bg-emerald-950/20 border-emerald-900">
+                      <h4 className="font-bold text-emerald-400">{item.title}</h4>
+                      <p className="text-sm mt-2 text-gray-300">{item.content}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </main>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
+
