@@ -1,148 +1,293 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>FLOUSY – Personal Finance Dashboard</title>
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- React & Babel -->
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  <style>
-    body { font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; }
-  </style>
-</head>
-<body class="bg-[#0f1711] text-gray-100 min-h-screen">
-  <div id="root"></div>
+import React, { useState, useEffect, useMemo } from 'react';
+import { 
+  Wallet, Receipt, FileText, Settings, Plus, Trash2, Edit3, 
+  Eye, EyeOff, Sun, Moon, CheckCircle2, Circle, AlertTriangle, X 
+} from 'lucide-react';
 
-  <script type="text/babel">
-    const { useState, useEffect } = React;
+// مفاتيح التخزين المحلي (للحفاظ على بيانات المستخدم)
+const STORAGE_KEYS = {
+  ACCOUNTS: 'flousy_accounts',
+  SUBSCRIPTIONS: 'flousy_subscriptions',
+  EXPENSES: 'flousy_expenses',
+  WISHLIST: 'flousy_wishlist',
+  DEBTS: 'flousy_debts',
+  NOTES: 'flousy_notes',
+  THEME: 'flousy_theme',
+  HIDE_BALANCES: 'flousy_hide_balances',
+};
 
-    const CURRENT_MIGRATION_VERSION = 'v2_clean_defaults';
-    const checkAndCleanStorage = () => {
-      try {
-        const migration = localStorage.getItem('flousy_migration_version');
-        if (migration !== CURRENT_MIGRATION_VERSION) {
-          localStorage.removeItem('flousy_accounts');
-          localStorage.removeItem('flousy_obligations');
-          localStorage.removeItem('flousy_essentials');
-          localStorage.removeItem('flousy_wishlist');
-          localStorage.removeItem('flousy_notes_debts');
-          localStorage.setItem('flousy_migration_version', CURRENT_MIGRATION_VERSION);
-        }
-      } catch (e) {
-        console.error("Migration error:", e);
+const ACCOUNT_PRESETS = [
+  'Vodafone Cash', 'Etisalat Cash', 'حساب بنكي', 'Delta', 'PayPal', 'Cash'
+];
+
+export default function App() {
+  // --- 1. شاشة البداية المتحركة (Splash Screen - 5 ثوانٍ بالضبط) ---
+  const [showSplash, setShowSplash] = useState(true);
+  const [splashProgress, setSplashProgress] = useState(0);
+
+  useEffect(() => {
+    const startTime = Date.now();
+    const duration = 5000;
+    const interval = setInterval(() => {
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min((elapsed / duration) * 100, 100);
+      setSplashProgress(progress);
+      if (elapsed >= duration) {
+        clearInterval(interval);
+        setShowSplash(false);
       }
-    };
+    }, 40);
+    return () => clearInterval(interval);
+  }, []);
 
-    function App() {
-      const [showSplash, setShowSplash] = useState(true);
+  // --- 2. إدارة الإعدادات والحالة العامة ---
+  const [activeTab, setActiveTab] = useState('wallet'); // 'wallet' | 'expenses' | 'debts'
+  const [darkMode, setDarkMode] = useState(() => localStorage.getItem(STORAGE_KEYS.THEME) !== 'light');
+  const [hideBalances, setHideBalances] = useState(() => localStorage.getItem(STORAGE_KEYS.HIDE_BALANCES) === 'true');
+  const [showSettings, setShowSettings] = useState(false);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
 
-      useEffect(() => {
-        checkAndCleanStorage();
-        const timer = setTimeout(() => setShowSplash(false), 5000);
-        return () => clearTimeout(timer);
-      }, []);
+  // --- 3. البيانات الحقيقية (تبدأ فارغة بدون أي داتا تجريبية) ---
+  const [accounts, setAccounts] = useState(() => JSON.parse(localStorage.getItem(STORAGE_KEYS.ACCOUNTS) || '[]'));
+  const [subscriptions, setSubscriptions] = useState(() => JSON.parse(localStorage.getItem(STORAGE_KEYS.SUBSCRIPTIONS) || '[]'));
+  const [expenses, setExpenses] = useState(() => JSON.parse(localStorage.getItem(STORAGE_KEYS.EXPENSES) || '[]'));
+  const [wishlist, setWishlist] = useState(() => JSON.parse(localStorage.getItem(STORAGE_KEYS.WISHLIST) || '[]'));
+  const [debts, setDebts] = useState(() => JSON.parse(localStorage.getItem(STORAGE_KEYS.DEBTS) || '[]'));
+  const [notes, setNotes] = useState(() => JSON.parse(localStorage.getItem(STORAGE_KEYS.NOTES) || '[]'));
 
-      const [activeTab, setActiveTab] = useState('wallet');
-      const [darkMode, setDarkMode] = useState(true);
-      const [hideBalances, setHideBalances] = useState(false);
-      const [toast, setToast] = useState(null);
+  // نافذة الإضافة والتعديل
+  const [modalMode, setModalMode] = useState(null); // 'account' | 'subscription' | 'expense' | 'wishlist' | 'debt' | 'note'
+  const [editData, setEditData] = useState(null);
 
-      const showToast = (msg) => {
-        setToast(msg);
-        setTimeout(() => setToast(null), 3500);
-      };
+  // حفظ التغييرات في localStorage تلقائياً
+  useEffect(() => { localStorage.setItem(STORAGE_KEYS.ACCOUNTS, JSON.stringify(accounts)); }, [accounts]);
+  useEffect(() => { localStorage.setItem(STORAGE_KEYS.SUBSCRIPTIONS, JSON.stringify(subscriptions)); }, [subscriptions]);
+  useEffect(() => { localStorage.setItem(STORAGE_KEYS.EXPENSES, JSON.stringify(expenses)); }, [expenses]);
+  useEffect(() => { localStorage.setItem(STORAGE_KEYS.WISHLIST, JSON.stringify(wishlist)); }, [wishlist]);
+  useEffect(() => { localStorage.setItem(STORAGE_KEYS.DEBTS, JSON.stringify(debts)); }, [debts]);
+  useEffect(() => { localStorage.setItem(STORAGE_KEYS.NOTES, JSON.stringify(notes)); }, [notes]);
+  useEffect(() => { localStorage.setItem(STORAGE_KEYS.THEME, darkMode ? 'dark' : 'light'); }, [darkMode]);
+  useEffect(() => { localStorage.setItem(STORAGE_KEYS.HIDE_BALANCES, String(hideBalances)); }, [hideBalances]);
 
-      const [accounts, setAccounts] = useState(() => {
-        try {
-          const saved = localStorage.getItem('flousy_accounts');
-          return saved ? JSON.parse(saved) : [];
-        } catch { return []; }
-      });
+  // إجمالي الأرصدة النشطة فقط
+  const totalBalance = useMemo(() => {
+    return accounts
+      .filter(acc => acc.isActive !== false)
+      .reduce((sum, acc) => sum + (Number(acc.balance) || 0), 0);
+  }, [accounts]);
 
-      const [obligations, setObligations] = useState(() => {
-        try {
-          const saved = localStorage.getItem('flousy_obligations');
-          return saved ? JSON.parse(saved) : [];
-        } catch { return []; }
-      });
+  const formatCurrency = (amount) => {
+    if (hideBalances) return '••••••';
+    return Number(amount || 0).toLocaleString('ar-EG', { minimumFractionDigits: 2 }) + ' ج.م';
+  };
 
-      const [essentials, setEssentials] = useState(() => {
-        try {
-          const saved = localStorage.getItem('flousy_essentials');
-          return saved ? JSON.parse(saved) : [];
-        } catch { return []; }
-      });
+  const handleResetData = () => {
+    localStorage.clear();
+    setAccounts([]);
+    setSubscriptions([]);
+    setExpenses([]);
+    setWishlist([]);
+    setDebts([]);
+    setNotes([]);
+    setShowResetConfirm(false);
+    setShowSettings(false);
+  };
 
-      const [wishlist, setWishlist] = useState(() => {
-        try {
-          const saved = localStorage.getItem('flousy_wishlist');
-          return saved ? JSON.parse(saved) : [];
-        } catch { return []; }
-      });
+  // -------------------------------------------------------------
+  // عرض شاشة البداية (Splash Screen)
+  // -------------------------------------------------------------
+  if (showSplash) {
+    return (
+      <div className="fixed inset-0 z-50 bg-[#090d0b] text-white flex flex-col items-center justify-center p-6 select-none font-sans" dir="rtl">
+        <style>{`
+          @keyframes drawLetterF {
+            0% { stroke-dashoffset: 200; opacity: 0; }
+            40% { opacity: 1; }
+            100% { stroke-dashoffset: 0; opacity: 1; }
+          }
+          @keyframes barGrow {
+            0% { transform: scaleY(0); }
+            100% { transform: scaleY(1); }
+          }
+          @keyframes titleFade {
+            0% { opacity: 0; transform: scale(0.92); }
+            100% { opacity: 1; transform: scale(1); }
+          }
+          @keyframes tagFade {
+            0% { opacity: 0; transform: translateY(4px); }
+            100% { opacity: 1; transform: translateY(0); }
+          }
+          .anim-f {
+            stroke-dasharray: 200;
+            stroke-dashoffset: 200;
+            animation: drawLetterF 1s ease-out forwards;
+          }
+          .anim-bar-1 { animation: barGrow 0.35s ease-out 1.0s forwards; transform-origin: bottom; transform: scaleY(0); }
+          .anim-bar-2 { animation: barGrow 0.35s ease-out 1.25s forwards; transform-origin: bottom; transform: scaleY(0); }
+          .anim-bar-3 { animation: barGrow 0.35s ease-out 1.5s forwards; transform-origin: bottom; transform: scaleY(0); }
+          .anim-title { animation: titleFade 0.8s ease-out 1.8s forwards; opacity: 0; }
+          .anim-tagline { animation: tagFade 0.6s ease-out 2.6s forwards; opacity: 0; }
+        `}</style>
 
-      const [notesDebts, setNotesDebts] = useState(() => {
-        try {
-          const saved = localStorage.getItem('flousy_notes_debts');
-          return saved ? JSON.parse(saved) : [];
-        } catch { return []; }
-      });
+        {/* الشعار الهندسي وحرف F */}
+        <div className="relative w-28 h-28 flex items-center justify-center mb-6">
+          <div className="absolute inset-0 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl transform rotate-6 shadow-[0_0_25px_rgba(16,185,129,0.2)]"></div>
+          <div className="absolute inset-0 bg-slate-900/90 border border-emerald-500/50 rounded-2xl flex items-center justify-center backdrop-blur-sm">
+            <svg viewBox="0 0 100 100" className="w-16 h-16">
+              {/* رسم حرف F المضيء */}
+              <path
+                d="M 32,80 L 32,24 L 72,24 M 32,48 L 62,48"
+                fill="none"
+                stroke="#10b981"
+                strokeWidth="7"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="anim-f"
+              />
+            </svg>
+          </div>
+        </div>
 
-      useEffect(() => { localStorage.setItem('flousy_accounts', JSON.stringify(accounts)); }, [accounts]);
-      useEffect(() => { localStorage.setItem('flousy_obligations', JSON.stringify(obligations)); }, [obligations]);
-      useEffect(() => { localStorage.setItem('flousy_essentials', JSON.stringify(essentials)); }, [essentials]);
-      useEffect(() => { localStorage.setItem('flousy_wishlist', JSON.stringify(wishlist)); }, [wishlist]);
-      useEffect(() => { localStorage.setItem('flousy_notes_debts', JSON.stringify(notesDebts)); }, [notesDebts]);
+        {/* أعمدة النمو المالية */}
+        <div className="flex items-end gap-1.5 h-6 mb-6">
+          <div className="w-2.5 h-3 bg-emerald-600/70 rounded-t anim-bar-1"></div>
+          <div className="w-2.5 h-5 bg-emerald-500/80 rounded-t anim-bar-2"></div>
+          <div className="w-2.5 h-6 bg-emerald-400 rounded-t anim-bar-3 shadow-[0_0_8px_rgba(52,211,153,0.5)]"></div>
+        </div>
 
-      const [modalType, setModalType] = useState(null);
-      const [editingItem, setEditingItem] = useState(null);
+        {/* اسم التطبيق والشعار النصي */}
+        <div className="text-center">
+          <h1 className="text-4xl font-extrabold tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-green-300 anim-title">
+            FLOUSY
+          </h1>
+          <p className="text-emerald-500/80 text-sm tracking-wide font-medium mt-1.5 anim-tagline">
+            Your Money. Your Control.
+          </p>
+        </div>
 
-      const totalBalance = accounts
-        .filter(acc => acc.status === 'active')
-        .reduce((sum, acc) => sum + (parseFloat(acc.balance) || 0), 0);
+        {/* شريط التحميل المستمر طوال 5 ثوانٍ */}
+        <div className="w-48 bg-slate-800/80 h-1.5 rounded-full overflow-hidden mt-10 border border-emerald-500/20">
+          <div 
+            className="h-full bg-gradient-to-r from-emerald-500 to-green-400 transition-all duration-75 ease-linear shadow-[0_0_10px_#10b981]"
+            style={{ width: `${splashProgress}%` }}
+          />
+        </div>
+      </div>
+    );
+  }
 
-      const totalObligations = obligations.reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0);
-      const paidObligations = obligations.filter(item => item.isPaid).reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0);
+  // -------------------------------------------------------------
+  // التطبيق الرئيسي
+  // -------------------------------------------------------------
+  return (
+    <div className={`min-h-screen ${darkMode ? 'bg-[#0b0f0e] text-slate-100' : 'bg-slate-50 text-slate-800'} transition-colors duration-200`} dir="rtl">
+      
+      {/* رأس الصفحة (Header) */}
+      <header className={`sticky top-0 z-30 border-b backdrop-blur-md px-4 py-3 max-w-5xl mx-auto flex items-center justify-between ${
+        darkMode ? 'bg-[#0b0f0e]/90 border-emerald-950/60' : 'bg-white/90 border-slate-200'
+      }`}>
+        <div className="flex items-center gap-2.5">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-600 to-emerald-400 flex items-center justify-center text-white font-black text-xl shadow-md shadow-emerald-500/20">
+            F
+          </div>
+          <div>
+            <h1 className="text-lg font-black tracking-wide leading-none text-emerald-500">FLOUSY</h1>
+            <span className="text-[10px] text-slate-400 font-medium">Your Money. Your Control.</span>
+          </div>
+        </div>
 
-      if (showSplash) {
-        return (
-          <div className="fixed inset-0 bg-[#0a0f0d] text-white flex flex-col items-center justify-center z-50 font-sans select-none px-4 text-center">
-            <div className="relative flex flex-col items-center">
-              <div className="relative w-28 h-28 flex items-center justify-center mb-6">
-                <svg className="w-full h-full animate-pulse" viewBox="0 0 100 100" fill="none">
-                  <path d="M30 20 H75 M30 20 V80 M30 50 H65" stroke="#10b981" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </div>
-              <div className="flex items-end gap-2 h-10 mb-6">
-                <div className="w-2.5 bg-emerald-600 rounded-t-md animate-bounce h-5"></div>
-                <div className="w-2.5 bg-emerald-500 rounded-t-md animate-bounce h-8"></div>
-                <div className="w-2.5 bg-emerald-400 rounded-t-md animate-bounce h-10"></div>
-              </div>
-              <h1 className="text-3xl font-extrabold tracking-wider text-white mb-2 font-mono">FLOUSY</h1>
-              <p className="text-emerald-400 text-xs sm:text-sm font-medium mb-8">Your Money. Your Control.</p>
-              <div className="w-44 h-1.5 bg-gray-800 rounded-full overflow-hidden">
-                <div className="h-full bg-emerald-500 rounded-full animate-[loading_5s_linear_forwards]"></div>
+        <div className="flex items-center gap-1.5">
+          {/* إظهار / إخفاء الأرصدة سريعاً */}
+          <button 
+            onClick={() => setHideBalances(!hideBalances)} 
+            className={`p-2 rounded-xl border transition ${
+              darkMode ? 'bg-slate-900 border-slate-800 hover:bg-slate-800' : 'bg-slate-100 border-slate-200 hover:bg-slate-200'
+            }`}
+            title={hideBalances ? "إظهار الأرصدة" : "إخفاء الأرصدة"}
+          >
+            {hideBalances ? <EyeOff size={18} className="text-amber-400" /> : <Eye size={18} className="text-slate-400" />}
+          </button>
+
+          {/* زر الإعدادات */}
+          <button 
+            onClick={() => setShowSettings(true)}
+            className={`p-2 rounded-xl border transition ${
+              darkMode ? 'bg-slate-900 border-slate-800 hover:bg-slate-800' : 'bg-slate-100 border-slate-200 hover:bg-slate-200'
+            }`}
+          >
+            <Settings size={18} className="text-emerald-500" />
+          </button>
+        </div>
+      </header>
+
+      {/* محتوى الصفحة الرئيسي */}
+      <main className="max-w-4xl mx-auto p-4 pb-28">
+        
+        {/* ======================= الصفحة 1: فلوسي – My Wallet ======================= */}
+        {activeTab === 'wallet' && (
+          <div className="space-y-6 animate-fadeIn">
+            {/* بطاقة الرصيد الإجمالي */}
+            <div className={`p-6 rounded-3xl border relative overflow-hidden ${
+              darkMode 
+                ? 'bg-gradient-to-br from-emerald-950/40 via-slate-900 to-[#0d1411] border-emerald-900/40 shadow-xl shadow-emerald-950/20' 
+                : 'bg-gradient-to-br from-emerald-50 to-white border-emerald-100 shadow-sm'
+            }`}>
+              <div className="relative z-10">
+                <span className="text-xs font-semibold text-emerald-500 tracking-wider">إجمالي الأرصدة النشطة</span>
+                <div className="text-3xl sm:text-4xl font-extrabold mt-1 tracking-tight">
+                  {formatCurrency(totalBalance)}
+                </div>
+                <p className="text-xs text-slate-400 mt-2">
+                  محسوب من {accounts.filter(a => a.isActive !== false).length} حساب نشط
+                </p>
               </div>
             </div>
-            <style>{`@keyframes loading { 0% { width: 0%; } 100% { width: 100%; } }`}</style>
-          </div>
-        );
-      }
 
-      return (
-        <div dir="rtl" className={`min-h-screen font-sans transition-colors duration-300 pb-20 md:pb-8 ${darkMode ? 'bg-[#0f1711] text-gray-100' : 'bg-gray-50 text-gray-800'}`}>
-          
-          {/* Header متجاوب 100% */}
-          <header className={`sticky top-0 z-40 border-b backdrop-blur-md ${darkMode ? 'bg-[#0f1711]/90 border-emerald-900/30' : 'bg-white/90 border-emerald-200'}`}>
-            <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between gap-2">
-              
-              <div className="flex items-center gap-2.5 shrink-0">
-                <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-500 font-bold text-lg">F</div>
-                <span className="text-lg font-bold text-emerald-400 font-mono tracking-wider">FLOUSY</span>
-              </div>
+            {/* قائمة الحسابات والمحافظ */}
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-bold">الحسابات والمحافظ المالية</h2>
+              <button
+                onClick={() => { setEditData(null); setModalMode('account'); }}
+                className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-3.5 py-2 rounded-xl font-bold transition shadow-md shadow-emerald-600/20"
+              >
+                <Plus size={16} /> إضافة حساب
+              </button>
+            </div>
 
-              {/* أزرار التنقل تظهر في
-                
+            {accounts.length === 0 ? (
+              <EmptyState 
+                title="لا توجد حسابات أو محافظ بعد" 
+                subtitle="ابدأ بإضافة حساباتك مثل فودافون كاش، الحساب البنكي، أو الكاش لتتبع أموالك بسهولة."
+                actionText="إضافة أول حساب"
+                onAction={() => { setEditData(null); setModalMode('account'); }}
+              />
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                {accounts.map(acc => (
+                  <div 
+                    key={acc.id} 
+                    className={`p-4 rounded-2xl border transition relative ${
+                      darkMode ? 'bg-slate-900/60 border-slate-800/80 hover:border-emerald-800/50' : 'bg-white border-slate-200 shadow-sm'
+                    } ${acc.isActive === false ? 'opacity-60' : ''}`}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <span className="text-[11px] font-semibold text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-full">
+                          {acc.type}
+                        </span>
+                        <h3 className="font-bold text-base mt-1.5">{acc.name}</h3>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <button 
+                          onClick={() => { setEditData(acc); setModalMode('account'); }}
+                          className="p-1.5 text-slate-400 hover:text-emerald-500"
+                        >
+                          <Edit3 size={15} />
+                        </button>
+                        <button 
+                          onClick={() => setAccounts(accounts.filter(a => a.id !== acc.id))}
+                          className="p-1.5 text-slate-400 hover:text-red-500"
+                        >
+                          <Trash2 size={15} />
+                        </button>
+                      </div>
